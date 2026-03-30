@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KILIAN BLE1 Dashboard</title>
+  <title>KILIAN BLE1 Dashboard Auto</title>
   <style>
     body { font-family: system-ui, sans-serif; margin: 0; padding: 20px; background: #0f1115; color: #f2f4f8; }
     .wrap { max-width: 760px; margin: 0 auto; }
@@ -23,6 +23,7 @@
 <body>
   <div class="wrap">
     <h1>KILIAN BLE1 Dashboard</h1>
+    <p id="targetHint"></p>
     <p>Page de test Web Bluetooth pour la première mise à niveau BLE1, lecture seule.</p>
 
     <div class="status" id="status">Déconnecté.</div>
@@ -68,7 +69,10 @@
     };
 
     const decoder = new TextDecoder();
+    const params = new URLSearchParams(window.location.search);
+    const requestedDevice = params.get('device');
     const statusEl = document.getElementById('status');
+    const targetHintEl = document.getElementById('targetHint');
     let device = null;
     let server = null;
     let service = null;
@@ -76,6 +80,15 @@
 
     function setStatus(text) {
       statusEl.textContent = text;
+    }
+
+    function updateTargetUi() {
+      if (requestedDevice) {
+        targetHintEl.textContent = `Cible QR : ${requestedDevice}`;
+        document.getElementById('connectBtn').textContent = `Connecter ${requestedDevice}`;
+      } else {
+        targetHintEl.textContent = 'Aucune clé pré-ciblée.';
+      }
     }
 
     function decodeValue(dataView) {
@@ -115,9 +128,13 @@
       }
 
       try {
-        setStatus('Recherche d’une clé KILIAN BLE1...');
+        setStatus(requestedDevice ? `Recherche de ${requestedDevice}...` : 'Recherche d’une clé KILIAN BLE1...');
+        const filters = requestedDevice
+          ? [{ name: requestedDevice, services: [SERVICE_UUID] }]
+          : [{ services: [SERVICE_UUID] }];
+
         device = await navigator.bluetooth.requestDevice({
-          filters: [{ services: [SERVICE_UUID] }],
+          filters,
           optionalServices: [SERVICE_UUID]
         });
 
@@ -149,6 +166,7 @@
       setStatus('Déconnecté.');
     }
 
+    updateTargetUi();
     document.getElementById('connectBtn').addEventListener('click', connectBluetooth);
     document.getElementById('refreshBtn').addEventListener('click', refreshAll);
     document.getElementById('disconnectBtn').addEventListener('click', disconnectBluetooth);
