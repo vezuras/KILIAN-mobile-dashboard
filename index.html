@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KILIAN BLE1 Dashboard</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 20px; background: #0f1115; color: #f2f4f8; }
+    .wrap { max-width: 760px; margin: 0 auto; }
+    h1 { margin-top: 0; }
+    .card { background: #171b22; border: 1px solid #2a3240; border-radius: 16px; padding: 16px; margin: 14px 0; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .label { font-size: 0.85rem; opacity: 0.75; }
+    .value { font-size: 1.1rem; margin-top: 6px; word-break: break-word; }
+    button { border: 0; border-radius: 12px; padding: 12px 16px; font-size: 1rem; cursor: pointer; margin-right: 8px; }
+    button.primary { background: #3b82f6; color: white; }
+    button.secondary { background: #2a3240; color: white; }
+    .status { padding: 10px 12px; border-radius: 12px; background: #121821; border: 1px solid #2a3240; margin: 10px 0 16px; }
+    code { background: #11151c; padding: 2px 6px; border-radius: 8px; }
+    small { opacity: 0.8; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>KILIAN BLE1 Dashboard</h1>
+    <p>Page de test Web Bluetooth pour la première mise à niveau BLE1, lecture seule.</p>
+
+    <div class="status" id="status">Déconnecté.</div>
+
+    <p>
+      <button class="primary" id="connectBtn">Connecter</button>
+      <button class="secondary" id="refreshBtn">Rafraîchir</button>
+      <button class="secondary" id="disconnectBtn">Déconnecter</button>
+    </p>
+
+    <div class="card">
+      <strong>Préparation côté clé</strong>
+      <div style="margin-top:8px">
+        Ouvre <code>ADMIN</code> → <code>MOBILE DASH</code> sur A ou B pour activer la fenêtre BLE pendant 120 secondes.
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><div class="label">Rôle</div><div class="value" id="device_role">—</div></div>
+      <div class="card"><div class="label">État système</div><div class="value" id="system_state">—</div></div>
+      <div class="card"><div class="label">État pair</div><div class="value" id="pair_state">—</div></div>
+      <div class="card"><div class="label">Résumé pair</div><div class="value" id="pair_summary">—</div></div>
+      <div class="card"><div class="label">Compteurs</div><div class="value" id="counter_summary">—</div></div>
+      <div class="card"><div class="label">Dernier événement</div><div class="value" id="last_event">—</div></div>
+      <div class="card"><div class="label">Build</div><div class="value" id="build_info">—</div></div>
+      <div class="card"><div class="label">Capacités</div><div class="value" id="capabilities">—</div></div>
+    </div>
+
+    <p><small>Cette page doit être servie en HTTPS ou sur un contexte sécurisé compatible Web Bluetooth.</small></p>
+  </div>
+
+  <script>
+    const SERVICE_UUID = '8f4e1000-2b65-4d1a-9f5d-6b6f9cf50001';
+    const CHAR_UUIDS = {
+      device_role: '8f4e1001-2b65-4d1a-9f5d-6b6f9cf50001',
+      system_state: '8f4e1002-2b65-4d1a-9f5d-6b6f9cf50001',
+      pair_state: '8f4e1003-2b65-4d1a-9f5d-6b6f9cf50001',
+      pair_summary: '8f4e1004-2b65-4d1a-9f5d-6b6f9cf50001',
+      counter_summary: '8f4e1005-2b65-4d1a-9f5d-6b6f9cf50001',
+      last_event: '8f4e1006-2b65-4d1a-9f5d-6b6f9cf50001',
+      build_info: '8f4e1007-2b65-4d1a-9f5d-6b6f9cf50001',
+      capabilities: '8f4e1008-2b65-4d1a-9f5d-6b6f9cf50001'
+    };
+
+    const decoder = new TextDecoder();
+    const statusEl = document.getElementById('status');
+    let device = null;
+    let server = null;
+    let service = null;
+    const characteristics = {};
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+    function decodeValue(dataView) {
+      return decoder.decode(dataView.buffer.slice(dataView.byteOffset, dataView.byteOffset + dataView.byteLength));
+    }
+
+    function renderField(id, value) {
+      document.getElementById(id).textContent = value || '—';
+    }
+
+    async function attachNotifications(id, characteristic) {
+      try {
+        characteristic.addEventListener('characteristicvaluechanged', (event) => {
+          renderField(id, decodeValue(event.target.value));
+        });
+        await characteristic.startNotifications();
+      } catch (err) {
+        console.warn('Notifications non disponibles pour', id, err);
+      }
+    }
+
+    async function refreshAll() {
+      if (!service) return;
+      for (const [id, uuid] of Object.entries(CHAR_UUIDS)) {
+        const characteristic = characteristics[id] || await service.getCharacteristic(uuid);
+        characteristics[id] = characteristic;
+        const value = await characteristic.readValue();
+        renderField(id, decodeValue(value));
+      }
+      setStatus(`Connecté à ${device?.name || 'KILIAN'}.`);
+    }
+
+    async function connectBluetooth() {
+      if (!navigator.bluetooth) {
+        setStatus('Web Bluetooth non disponible sur ce navigateur.');
+        return;
+      }
+
+      try {
+        setStatus('Recherche d’une clé KILIAN BLE1...');
+        device = await navigator.bluetooth.requestDevice({
+          filters: [{ services: [SERVICE_UUID] }],
+          optionalServices: [SERVICE_UUID]
+        });
+
+        device.addEventListener('gattserverdisconnected', () => {
+          setStatus('Clé déconnectée.');
+          server = null;
+          service = null;
+        });
+
+        server = await device.gatt.connect();
+        service = await server.getPrimaryService(SERVICE_UUID);
+
+        for (const [id, uuid] of Object.entries(CHAR_UUIDS)) {
+          const characteristic = await service.getCharacteristic(uuid);
+          characteristics[id] = characteristic;
+          await attachNotifications(id, characteristic);
+        }
+
+        await refreshAll();
+      } catch (err) {
+        setStatus(`Connexion annulée ou échouée : ${err.message}`);
+      }
+    }
+
+    async function disconnectBluetooth() {
+      if (device?.gatt?.connected) {
+        device.gatt.disconnect();
+      }
+      setStatus('Déconnecté.');
+    }
+
+    document.getElementById('connectBtn').addEventListener('click', connectBluetooth);
+    document.getElementById('refreshBtn').addEventListener('click', refreshAll);
+    document.getElementById('disconnectBtn').addEventListener('click', disconnectBluetooth);
+  </script>
+</body>
+</html>
