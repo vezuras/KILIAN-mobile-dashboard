@@ -1,9 +1,10 @@
+
 <!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KILIAN BLE1 Dashboard Unique Session</title>
+  <title>KILIAN BLE1 Dashboard DEV</title>
   <style>
     body { font-family: system-ui, sans-serif; margin: 0; padding: 20px; background: #0f1115; color: #f2f4f8; }
     .wrap { max-width: 860px; margin: 0 auto; }
@@ -12,20 +13,18 @@
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
     .label { font-size: 0.85rem; opacity: 0.75; }
     .value { font-size: 1.05rem; margin-top: 6px; word-break: break-word; }
-    button { border: 0; border-radius: 12px; padding: 12px 16px; font-size: 1rem; cursor: pointer; margin-right: 8px; }
+    button { border: 0; border-radius: 12px; padding: 12px 16px; font-size: 1rem; cursor: pointer; margin-right: 8px; margin-bottom: 8px; }
     button.primary { background: #3b82f6; color: white; }
     button.secondary { background: #2a3240; color: white; }
     .status { padding: 10px 12px; border-radius: 12px; background: #121821; border: 1px solid #2a3240; margin: 10px 0 16px; }
     code { background: #11151c; padding: 2px 6px; border-radius: 8px; }
     small { opacity: 0.8; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>KILIAN BLE1 Dashboard</h1>
+    <h1>KILIAN BLE1 Dashboard DEV</h1>
     <p id="targetHint"></p>
-    <p>Le QR ouvre la bonne page du dashboard. Une fois connecté, la page passe à une <strong>URL de session unique</strong> qui n'est plus réutilisable après validation.</p>
 
     <div class="status" id="status">Déconnecté.</div>
 
@@ -38,16 +37,9 @@
     <div class="card">
       <strong>Préparation côté clé</strong>
       <div style="margin-top:8px">
-        Ouvre <code>ADMIN</code> → <code>MOBILE DASH</code> sur A ou B pour activer la fenêtre BLE. Le BLE reste actif en continu pendant la fenêtre, et la clé alterne entre message et QR.
+        Ouvre <code>ADMIN</code> → <code>MOBILE DASH</code> sur A ou B pour activer la fenêtre BLE.
+        Cette version DEV lit seulement les caractéristiques réellement exposées par le firmware BLE1 actuel.
       </div>
-    </div>
-
-    <div class="card">
-      <strong>Session unique</strong>
-      <div style="margin-top:8px">
-        Après connexion BLE, la page lit le jeton de session de la clé, valide la session, puis remplace l'URL par une nouvelle URL de session. Un ancien lien avec un ancien jeton sera refusé.
-      </div>
-      <div style="margin-top:10px" class="mono" id="sessionUrlPreview">URL de session : —</div>
     </div>
 
     <div class="grid">
@@ -59,16 +51,13 @@
       <div class="card"><div class="label">Dernier événement</div><div class="value" id="last_event">—</div></div>
       <div class="card"><div class="label">Build</div><div class="value" id="build_info">—</div></div>
       <div class="card"><div class="label">Capacités</div><div class="value" id="capabilities">—</div></div>
-      <div class="card"><div class="label">État session</div><div class="value" id="session_state">—</div></div>
-      <div class="card"><div class="label">Jeton session actif</div><div class="value mono" id="session_token">—</div></div>
     </div>
 
-    <p><small>Cette page doit être servie en HTTPS ou sur un contexte sécurisé compatible Web Bluetooth. Le navigateur exige toujours un geste utilisateur sur <code>Connecter</code>.</small></p>
+    <p><small>Utilise Chrome Android. Le navigateur demande toujours un geste utilisateur sur <code>Connecter</code>.</small></p>
   </div>
 
   <script>
     const SERVICE_UUID = '8f4e1000-2b65-4d1a-9f5d-6b6f9cf50001';
-    const SESSION_CLAIM_UUID = '8f4e100b-2b65-4d1a-9f5d-6b6f9cf50001';
     const CHAR_UUIDS = {
       device_role: '8f4e1001-2b65-4d1a-9f5d-6b6f9cf50001',
       system_state: '8f4e1002-2b65-4d1a-9f5d-6b6f9cf50001',
@@ -77,20 +66,21 @@
       counter_summary: '8f4e1005-2b65-4d1a-9f5d-6b6f9cf50001',
       last_event: '8f4e1006-2b65-4d1a-9f5d-6b6f9cf50001',
       build_info: '8f4e1007-2b65-4d1a-9f5d-6b6f9cf50001',
-      capabilities: '8f4e1008-2b65-4d1a-9f5d-6b6f9cf50001',
-      session_state: '8f4e1009-2b65-4d1a-9f5d-6b6f9cf50001',
-      session_token: '8f4e100a-2b65-4d1a-9f5d-6b6f9cf50001'
+      capabilities: '8f4e1008-2b65-4d1a-9f5d-6b6f9cf50001'
     };
 
     const decoder = new TextDecoder();
-    const encoder = new TextEncoder();
     const params = new URLSearchParams(window.location.search);
-    let requestedDevice = params.get('device');
-    let requestedSession = params.get('s');
+    const hash = (window.location.hash || '').replace('#', '').toLowerCase();
+
+    let requestedDevice = params.get('device') || null;
+    if (!requestedDevice) {
+      if (hash === 'a') requestedDevice = 'KILIAN-A';
+      if (hash === 'b') requestedDevice = 'KILIAN-B';
+    }
 
     const statusEl = document.getElementById('status');
     const targetHintEl = document.getElementById('targetHint');
-    const sessionUrlPreviewEl = document.getElementById('sessionUrlPreview');
 
     let device = null;
     let server = null;
@@ -118,30 +108,12 @@
       } else {
         targetHintEl.textContent = 'Aucune clé pré-ciblée. Utilise Connecter pour choisir A ou B.';
       }
-      sessionUrlPreviewEl.textContent = `URL de session : ${window.location.href}`;
     }
 
     function decodeValue(dataView) {
       return decoder.decode(
         dataView.buffer.slice(dataView.byteOffset, dataView.byteOffset + dataView.byteLength)
       ).trim();
-    }
-
-    function upsertSessionUrl(token) {
-      const url = new URL(window.location.href);
-      if (requestedDevice) {
-        url.searchParams.set('device', requestedDevice);
-      }
-      url.searchParams.set('s', token);
-      history.replaceState({}, '', url.toString());
-      requestedSession = token;
-      updateTargetUi();
-    }
-
-    async function readText(uuid) {
-      const characteristic = await service.getCharacteristic(uuid);
-      const value = await characteristic.readValue();
-      return decodeValue(value);
     }
 
     async function attachNotifications(id, characteristic) {
@@ -164,32 +136,6 @@
         renderField(id, decodeValue(value));
       }
       setStatus(`Connecté à ${device?.name || 'KILIAN'}.`);
-    }
-
-    async function validateAndClaimSession() {
-      const liveToken = await readText(CHAR_UUIDS.session_token);
-      renderField('session_token', liveToken);
-
-      if (!requestedSession) {
-        upsertSessionUrl(liveToken);
-      }
-
-      if (requestedSession !== liveToken) {
-        throw new Error('Lien de session expiré ou déjà utilisé.');
-      }
-
-      const claimCharacteristic = await service.getCharacteristic(SESSION_CLAIM_UUID);
-      await claimCharacteristic.writeValue(encoder.encode(`CLAIM|${requestedSession}`));
-      await new Promise(resolve => setTimeout(resolve, 180));
-
-      const nextToken = await readText(CHAR_UUIDS.session_token);
-      renderField('session_token', nextToken);
-
-      if (!nextToken || nextToken === requestedSession) {
-        throw new Error('La clé n’a pas validé la session.');
-      }
-
-      upsertSessionUrl(nextToken);
     }
 
     async function connectBluetooth() {
@@ -221,8 +167,6 @@
         server = await device.gatt.connect();
         service = await server.getPrimaryService(SERVICE_UUID);
 
-        await validateAndClaimSession();
-
         for (const [id, uuid] of Object.entries(CHAR_UUIDS)) {
           const characteristic = await service.getCharacteristic(uuid);
           characteristics[id] = characteristic;
@@ -230,7 +174,6 @@
         }
 
         await refreshAll();
-        setStatus(`Connecté à ${device?.name || 'KILIAN'}. Session unique validée.`);
       } catch (err) {
         if (device?.gatt?.connected) {
           device.gatt.disconnect();
@@ -243,7 +186,7 @@
       }
     }
 
-    async function disconnectBluetooth() {
+    function disconnectBluetooth() {
       if (device?.gatt?.connected) {
         device.gatt.disconnect();
       }
