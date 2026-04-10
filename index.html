@@ -20,7 +20,14 @@
     }
 
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
     body { padding: 18px; }
     .wrap { max-width: 1220px; margin: 0 auto; }
     h1 { margin: 0 0 8px; font-size: 1.9rem; }
@@ -45,6 +52,26 @@
     .compat-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
     .compat-reasons { margin: 10px 0 0; padding-left: 18px; color: var(--text); }
     .compat-reasons li { margin: 8px 0; }
+
+    .browser-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+      margin-bottom: 6px;
+    }
+
+    .browser-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      font-size: .9rem;
+    }
 
     .global-line {
       display: flex;
@@ -182,13 +209,23 @@
     <div id="compatCard" class="compat-card" aria-live="polite">
       <div class="compat-title">Bluetooth n’est pas disponible dans ce navigateur</div>
       <p id="compatSummary">Cette page s’est ouverte, mais le navigateur actuel n’expose pas Web Bluetooth.</p>
+
+      <div class="browser-row">
+        <div class="browser-pill">Navigateur détecté : <strong id="currentBrowserLabel">Inconnu</strong></div>
+        <div class="browser-pill hidden" id="recommendedBrowserWrap">Navigateur conseillé : <strong id="recommendedBrowserLabel">Chrome</strong></div>
+      </div>
+
       <ul id="compatReasons" class="compat-reasons"></ul>
+
       <div class="row" style="margin-top:14px">
         <a id="openChromeBtn" class="fakebtn primary" href="#">Ouvrir dans Chrome</a>
         <button id="copyLinkBtn" class="secondary">Copier le lien</button>
         <button id="continueBtn" class="secondary">Continuer quand même</button>
       </div>
-      <div class="hint">Astuce : garde un seul QR KILIAN. Cette page détecte automatiquement si le navigateur courant peut utiliser Bluetooth.</div>
+
+      <div class="hint">
+        Astuce : garde un seul QR KILIAN. Cette page détecte automatiquement si le navigateur courant peut utiliser Bluetooth et propose une sortie simple.
+      </div>
     </div>
 
     <div id="mainUi">
@@ -198,7 +235,10 @@
             <div style="font-weight:700; margin-bottom:4px">État global</div>
             <div class="small" id="globalSummary">Aucune clé connectée.</div>
           </div>
-          <div class="badge" id="globalCompatBadge"><span class="dot" id="compatDot"></span><span id="compatLabel">Compatibilité inconnue</span></div>
+          <div class="badge" id="globalCompatBadge">
+            <span class="dot" id="compatDot"></span>
+            <span id="compatLabel">Compatibilité inconnue</span>
+          </div>
         </div>
       </div>
 
@@ -243,6 +283,9 @@
     const openChromeBtn = document.getElementById('openChromeBtn');
     const copyLinkBtn = document.getElementById('copyLinkBtn');
     const continueBtn = document.getElementById('continueBtn');
+    const currentBrowserLabel = document.getElementById('currentBrowserLabel');
+    const recommendedBrowserWrap = document.getElementById('recommendedBrowserWrap');
+    const recommendedBrowserLabel = document.getElementById('recommendedBrowserLabel');
     const mainUi = document.getElementById('mainUi');
     const devicesGrid = document.getElementById('devicesGrid');
     const globalSummary = document.getElementById('globalSummary');
@@ -372,7 +415,9 @@
     }
 
     function decodeValue(dataView) {
-      return decoder.decode(dataView.buffer.slice(dataView.byteOffset, dataView.byteOffset + dataView.byteLength)).trim();
+      return decoder.decode(
+        dataView.buffer.slice(dataView.byteOffset, dataView.byteOffset + dataView.byteLength)
+      ).trim();
     }
 
     async function attachNotifications(deviceKey, field, characteristic) {
@@ -489,10 +534,37 @@
       }
     }
 
+    async function detectBrowserName() {
+      try {
+        if (navigator.brave && typeof navigator.brave.isBrave === 'function') {
+          const isBrave = await navigator.brave.isBrave();
+          if (isBrave) return 'Brave';
+        }
+      } catch {}
+
+      const ua = navigator.userAgent || '';
+      const uaDataBrands = navigator.userAgentData?.brands?.map(b => b.brand).join(' | ') || '';
+
+      if (/SamsungBrowser/i.test(ua)) return 'Samsung Internet';
+      if (/EdgA?|EdgiOS/i.test(ua)) return 'Microsoft Edge';
+      if (/OPR|Opera/i.test(ua)) return 'Opera';
+      if (/Firefox|FxiOS/i.test(ua)) return 'Firefox';
+      if (/Chrome|CriOS/i.test(ua) || /Google Chrome/i.test(uaDataBrands)) return 'Google Chrome';
+      if (/Safari/i.test(ua) && !/Chrome|CriOS|Edg|OPR|SamsungBrowser/i.test(ua)) return 'Safari';
+
+      return 'Navigateur inconnu';
+    }
+
+    function recommendedBrowserForCurrent(browserName) {
+      if (/Chrome/i.test(browserName)) return '';
+      return 'Google Chrome';
+    }
+
     async function computeCompatibility() {
       const reasons = [];
       const secure = window.isSecureContext;
       const hasBluetooth = !!navigator.bluetooth;
+      const browserName = await detectBrowserName();
       let availability = null;
 
       if (!secure) reasons.push('La page n’est pas ouverte dans un contexte sécurisé HTTPS.');
@@ -514,14 +586,17 @@
         secure,
         hasBluetooth,
         availability,
-        reasons
+        reasons,
+        browserName
       };
     }
 
     function buildChromeIntentUrl() {
       const current = location.href;
-      const encoded = encodeURIComponent(current);
-      return `intent://${location.host}${location.pathname}${location.search}${location.hash}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encoded};end`;
+      const fallback = encodeURIComponent(current);
+      const host = location.host;
+      const path = location.pathname + location.search + location.hash;
+      return `intent://${host}${path}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${fallback};end`;
     }
 
     async function copyCurrentLink() {
@@ -547,6 +622,16 @@
       updateGlobalSummary();
 
       const compat = await computeCompatibility();
+      currentBrowserLabel.textContent = compat.browserName;
+      const recommended = recommendedBrowserForCurrent(compat.browserName);
+
+      if (recommended) {
+        recommendedBrowserWrap.classList.remove('hidden');
+        recommendedBrowserLabel.textContent = recommended;
+      } else {
+        recommendedBrowserWrap.classList.add('hidden');
+      }
+
       if (compat.supported) {
         compatDot.classList.add('ok');
         compatLabel.textContent = compat.availability === false ? 'Bluetooth indisponible' : 'Web Bluetooth détecté';
@@ -558,7 +643,7 @@
       if (!compat.supported) {
         compatCard.classList.add('show');
         compatReasonsEl.innerHTML = compat.reasons.map(r => `<li>${escapeHtml(r)}</li>`).join('');
-        compatSummaryEl.textContent = 'Tu peux rester sur une URL unique KILIAN. Si le navigateur ne convient pas, la page te guide vers une option compatible.';
+        compatSummaryEl.textContent = `Navigateur détecté : ${compat.browserName}. Cette page peut rester unique, mais Bluetooth n’est pas utilisable ici tel quel.`;
       }
 
       const isAndroid = /Android/i.test(navigator.userAgent);
