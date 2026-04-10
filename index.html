@@ -3,150 +3,275 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KILIAN BLE2 Dashboard</title>
+  <title>KILIAN Mobile Console BLE2</title>
   <style>
     :root {
-      --bg: #0f1115;
-      --panel: #171b22;
-      --panel-2: #121821;
-      --line: #2a3240;
-      --text: #f2f4f8;
-      --muted: #a8b3c2;
-      --accent: #3b82f6;
-      --ok: #16a34a;
-      --warn: #f59e0b;
+      --bg: #0d1117;
+      --panel: #151b23;
+      --panel-2: #1b2430;
+      --line: #2a3444;
+      --text: #f3f6fb;
+      --muted: #aab6c8;
+      --ok: #1f9d55;
+      --warn: #d97706;
       --bad: #dc2626;
+      --accent: #3b82f6;
+      --accent-2: #2563eb;
     }
 
     * { box-sizing: border-box; }
-    body {
-      font-family: system-ui, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    .wrap { max-width: 980px; margin: 0 auto; }
-    h1 { margin: 0 0 8px; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { padding: 18px; }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+    h1 { margin: 0 0 8px; font-size: 1.9rem; }
     p { color: var(--muted); }
 
-    .card {
-      background: var(--panel);
+    .hero, .card, .global-card {
+      background: linear-gradient(180deg, var(--panel), #121821);
       border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 16px;
-      margin: 14px 0;
+      border-radius: 18px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.22);
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    .hero {
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .global-card {
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+
+    .global-line {
+      display: flex;
       gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
     }
 
-    .label { font-size: 0.85rem; opacity: 0.78; }
-    .value { font-size: 1.02rem; margin-top: 6px; word-break: break-word; }
+    .grid-main {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 16px;
+    }
 
-    .status {
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: var(--panel-2);
+    .card {
+      padding: 16px;
+    }
+
+    .card.target {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(59,130,246,.35), 0 10px 28px rgba(0,0,0,.28);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: .82rem;
+      line-height: 1;
       border: 1px solid var(--line);
-      margin: 10px 0 16px;
-      white-space: pre-wrap;
+      color: var(--muted);
+      background: #111722;
+      white-space: nowrap;
     }
 
-    .row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .badge.ok { color: #d5f7e6; border-color: rgba(31,157,85,.35); background: rgba(31,157,85,.18); }
+    .badge.warn { color: #ffe8c2; border-color: rgba(217,119,6,.35); background: rgba(217,119,6,.18); }
+    .badge.bad { color: #ffd8d8; border-color: rgba(220,38,38,.35); background: rgba(220,38,38,.18); }
+    .badge.accent { color: #dceaff; border-color: rgba(59,130,246,.35); background: rgba(59,130,246,.18); }
+
+    .status-box {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #101722;
+      border: 1px solid var(--line);
+      margin-bottom: 12px;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+    }
+
+    .btn-row, .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
 
     button {
       border: 0;
       border-radius: 12px;
-      padding: 12px 16px;
-      font-size: 0.98rem;
+      padding: 11px 14px;
+      font-size: .97rem;
       cursor: pointer;
-      color: white;
+      transition: transform .06s ease, opacity .12s ease, background .12s ease;
     }
 
-    button.primary { background: var(--accent); }
-    button.secondary { background: #2a3240; }
-    button.ok { background: var(--ok); }
-    button.warn { background: var(--warn); color: #111827; }
-    button.bad { background: var(--bad); }
-    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+    .primary { background: var(--accent); color: white; }
+    .primary:hover { background: var(--accent-2); }
+    .secondary { background: var(--panel-2); color: white; border: 1px solid var(--line); }
+    .success { background: var(--ok); color: white; }
+    .danger { background: var(--bad); color: white; }
+    .ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .mini {
+      background: #101722;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      min-height: 78px;
+    }
+
+    .label {
+      font-size: .8rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .value {
+      font-size: .98rem;
+      word-break: break-word;
+    }
+
+    .footer-note {
+      margin-top: 18px;
+      font-size: .93rem;
+      color: var(--muted);
+    }
 
     code {
-      background: #11151c;
-      padding: 2px 6px;
-      border-radius: 8px;
-    }
-
-    .token {
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 0.92rem;
-    }
-
-    .pill {
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 999px;
+      background: #0e141d;
       border: 1px solid var(--line);
-      background: var(--panel-2);
-      font-size: 0.85rem;
-      margin-top: 8px;
+      border-radius: 8px;
+      padding: 2px 6px;
+      color: #dbeafe;
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>KILIAN BLE2 Dashboard</h1>
-    <p id="targetHint"></p>
+    <section class="hero">
+      <h1>KILIAN Mobile Console BLE2</h1>
+      <p>
+        Console unifiée pour <strong>Clé A</strong> et <strong>Clé B</strong>.
+        Les QR <code>a.html</code> et <code>b.html</code> peuvent continuer à rediriger ici via <code>#a</code> et <code>#b</code>.
+      </p>
+      <p id="targetHint"></p>
+    </section>
 
-    <div class="status" id="status">Déconnecté.</div>
-
-    <div class="row">
-      <button class="primary" id="connectBtn">Connecter</button>
-      <button class="secondary" id="refreshBtn">Rafraîchir</button>
-      <button class="secondary" id="disconnectBtn">Déconnecter</button>
-    </div>
-
-    <div class="card">
-      <strong>Préparation côté clé</strong>
-      <div style="margin-top:8px">
-        Ouvre <code>ADMIN</code> → <code>MOBILE DASH</code> sur A ou B pour activer la fenêtre BLE.
-        Cette version BLE2 lit <code>session_state</code>, <code>session_token</code> et permet
-        <code>APPROVE|token</code>, <code>DENY|token</code> et <code>CLAIM|token</code> en mode legacy.
+    <section class="global-card">
+      <div class="global-line">
+        <div>
+          <strong>État global</strong>
+          <div id="globalStatus" style="margin-top:6px; color: var(--muted);">Aucune clé connectée.</div>
+        </div>
+        <div id="globalBadges" class="btn-row" style="margin-bottom:0;"></div>
       </div>
-      <div class="pill" id="capsBadge">Capacités : —</div>
-    </div>
+    </section>
 
-    <div class="grid">
-      <div class="card"><div class="label">Rôle</div><div class="value" id="device_role">—</div></div>
-      <div class="card"><div class="label">État système</div><div class="value" id="system_state">—</div></div>
-      <div class="card"><div class="label">État pair</div><div class="value" id="pair_state">—</div></div>
-      <div class="card"><div class="label">Résumé pair</div><div class="value" id="pair_summary">—</div></div>
-      <div class="card"><div class="label">Compteurs</div><div class="value" id="counter_summary">—</div></div>
-      <div class="card"><div class="label">Dernier événement</div><div class="value" id="last_event">—</div></div>
-      <div class="card"><div class="label">Build</div><div class="value" id="build_info">—</div></div>
-      <div class="card"><div class="label">Capacités</div><div class="value" id="capabilities">—</div></div>
-      <div class="card"><div class="label">Session state</div><div class="value" id="session_state">—</div></div>
-      <div class="card"><div class="label">Session token</div><div class="value token" id="session_token">—</div></div>
-    </div>
+    <section class="grid-main">
+      <article class="card" id="card-a">
+        <div class="card-header">
+          <div class="card-title">Clé A <span class="badge accent">KILIAN-A</span></div>
+          <div id="deviceBadge-a" class="badge">Déconnectée</div>
+        </div>
 
-    <div class="card">
-      <strong>Validation humaine</strong>
-      <div style="margin-top:8px; color: var(--muted)">
-        Utilise d’abord <code>APPROVE</code> ou <code>DENY</code> avec le token lu côté clé.
-        Le bouton <code>CLAIM legacy</code> reste là pour compatibilité si l’ancien firmware est encore flashé.
-      </div>
-      <div class="row" style="margin-top:12px">
-        <button class="ok" id="approveBtn" disabled>APPROVE</button>
-        <button class="bad" id="denyBtn" disabled>DENY</button>
-        <button class="warn" id="claimBtn" disabled>CLAIM legacy</button>
-      </div>
-    </div>
+        <div class="status-box" id="status-a">Déconnectée.</div>
 
-    <p><small>Utilise Chrome Android. Le navigateur demande toujours un geste utilisateur sur <code>Connecter</code>.</small></p>
+        <div class="btn-row">
+          <button class="primary" id="connectBtn-a">Connecter A</button>
+          <button class="secondary" id="refreshBtn-a">Rafraîchir</button>
+          <button class="secondary" id="disconnectBtn-a">Déconnecter</button>
+        </div>
+
+        <div class="action-row">
+          <button class="success" id="approveBtn-a">Approuver</button>
+          <button class="danger" id="denyBtn-a">Refuser</button>
+          <button class="ghost" id="legacyBtn-a">Legacy CLAIM</button>
+        </div>
+
+        <div class="info-grid">
+          <div class="mini"><div class="label">Rôle</div><div class="value" id="device_role-a">—</div></div>
+          <div class="mini"><div class="label">État système</div><div class="value" id="system_state-a">—</div></div>
+          <div class="mini"><div class="label">État pair</div><div class="value" id="pair_state-a">—</div></div>
+          <div class="mini"><div class="label">Résumé pair</div><div class="value" id="pair_summary-a">—</div></div>
+          <div class="mini"><div class="label">Compteurs</div><div class="value" id="counter_summary-a">—</div></div>
+          <div class="mini"><div class="label">Dernier événement</div><div class="value" id="last_event-a">—</div></div>
+          <div class="mini"><div class="label">Build</div><div class="value" id="build_info-a">—</div></div>
+          <div class="mini"><div class="label">Capacités</div><div class="value" id="capabilities-a">—</div></div>
+          <div class="mini"><div class="label">Session state</div><div class="value" id="session_state-a">—</div></div>
+          <div class="mini"><div class="label">Session token</div><div class="value" id="session_token-a">—</div></div>
+        </div>
+      </article>
+
+      <article class="card" id="card-b">
+        <div class="card-header">
+          <div class="card-title">Clé B <span class="badge accent">KILIAN-B</span></div>
+          <div id="deviceBadge-b" class="badge">Déconnectée</div>
+        </div>
+
+        <div class="status-box" id="status-b">Déconnectée.</div>
+
+        <div class="btn-row">
+          <button class="primary" id="connectBtn-b">Connecter B</button>
+          <button class="secondary" id="refreshBtn-b">Rafraîchir</button>
+          <button class="secondary" id="disconnectBtn-b">Déconnecter</button>
+        </div>
+
+        <div class="action-row">
+          <button class="success" id="approveBtn-b">Approuver</button>
+          <button class="danger" id="denyBtn-b">Refuser</button>
+          <button class="ghost" id="legacyBtn-b">Legacy CLAIM</button>
+        </div>
+
+        <div class="info-grid">
+          <div class="mini"><div class="label">Rôle</div><div class="value" id="device_role-b">—</div></div>
+          <div class="mini"><div class="label">État système</div><div class="value" id="system_state-b">—</div></div>
+          <div class="mini"><div class="label">État pair</div><div class="value" id="pair_state-b">—</div></div>
+          <div class="mini"><div class="label">Résumé pair</div><div class="value" id="pair_summary-b">—</div></div>
+          <div class="mini"><div class="label">Compteurs</div><div class="value" id="counter_summary-b">—</div></div>
+          <div class="mini"><div class="label">Dernier événement</div><div class="value" id="last_event-b">—</div></div>
+          <div class="mini"><div class="label">Build</div><div class="value" id="build_info-b">—</div></div>
+          <div class="mini"><div class="label">Capacités</div><div class="value" id="capabilities-b">—</div></div>
+          <div class="mini"><div class="label">Session state</div><div class="value" id="session_state-b">—</div></div>
+          <div class="mini"><div class="label">Session token</div><div class="value" id="session_token-b">—</div></div>
+        </div>
+      </article>
+    </section>
+
+    <p class="footer-note">
+      Utilise Chrome Android. Le navigateur exige toujours un geste utilisateur sur <code>Connecter</code>.
+      Pour agir, ouvre <code>ADMIN → MOBILE DASH</code> sur la clé concernée.
+    </p>
   </div>
 
   <script>
@@ -165,50 +290,27 @@
       session_claim: '8f4e100b-2b65-4d1a-9f5d-6b6f9cf50001'
     };
 
-    const READ_FIELDS = [
-      'device_role','system_state','pair_state','pair_summary','counter_summary',
-      'last_event','build_info','capabilities','session_state','session_token'
-    ];
-
     const decoder = new TextDecoder();
     const hash = (window.location.hash || '').replace('#', '').toLowerCase();
-    let requestedDevice = null;
-    if (hash === 'a') requestedDevice = 'KILIAN-A';
-    if (hash === 'b') requestedDevice = 'KILIAN-B';
-
-    const statusEl = document.getElementById('status');
     const targetHintEl = document.getElementById('targetHint');
-    const capsBadgeEl = document.getElementById('capsBadge');
-    const approveBtn = document.getElementById('approveBtn');
-    const denyBtn = document.getElementById('denyBtn');
-    const claimBtn = document.getElementById('claimBtn');
+    const globalStatusEl = document.getElementById('globalStatus');
+    const globalBadgesEl = document.getElementById('globalBadges');
 
-    let device = null;
-    let server = null;
-    let service = null;
-    const characteristics = {};
+    const DEVICE_CONFIG = {
+      a: { key: 'a', name: 'KILIAN-A', title: 'Clé A' },
+      b: { key: 'b', name: 'KILIAN-B', title: 'Clé B' }
+    };
 
-    function setStatus(text) {
-      statusEl.textContent = text;
-    }
-
-    function renderField(id, value) {
-      document.getElementById(id).textContent = value || '—';
-      if (id === 'capabilities') capsBadgeEl.textContent = `Capacités : ${value || '—'}`;
-    }
-
-    function clearFields() {
-      for (const id of READ_FIELDS) renderField(id, '—');
-      updateActionButtons();
-    }
-
-    function updateTargetUi() {
-      if (requestedDevice) {
-        targetHintEl.textContent = `Cible QR : ${requestedDevice}`;
-        document.getElementById('connectBtn').textContent = `Connecter ${requestedDevice}`;
-      } else {
-        targetHintEl.textContent = 'Aucune clé pré-ciblée. Utilise Connecter pour choisir A ou B.';
-      }
+    const deviceState = {};
+    for (const key of Object.keys(DEVICE_CONFIG)) {
+      deviceState[key] = {
+        device: null,
+        server: null,
+        service: null,
+        characteristics: {},
+        values: {},
+        connected: false
+      };
     }
 
     function decodeValue(dataView) {
@@ -217,150 +319,264 @@
       ).trim();
     }
 
-    function getField(id) {
-      return document.getElementById(id).textContent.trim();
+    function fieldId(field, key) {
+      return `${field}-${key}`;
     }
 
-    function currentToken() {
-      const value = getField('session_token');
-      return value === '—' ? '' : value;
+    function setStatus(key, text) {
+      document.getElementById(`status-${key}`).textContent = text;
+      updateGlobalStatus();
     }
 
-    function currentState() {
-      const value = getField('session_state');
-      return value === '—' ? '' : value.toUpperCase();
+    function setBadge(key, text, tone = '') {
+      const el = document.getElementById(`deviceBadge-${key}`);
+      el.textContent = text;
+      el.className = `badge${tone ? ' ' + tone : ''}`;
     }
 
-    function updateActionButtons() {
-      const enabled = !!service && !!currentToken() && currentState() === 'PENDING';
-      approveBtn.disabled = !enabled;
-      denyBtn.disabled = !enabled;
-      claimBtn.disabled = !enabled;
+    function renderField(key, field, value) {
+      const el = document.getElementById(fieldId(field, key));
+      if (el) el.textContent = value || '—';
+      deviceState[key].values[field] = value || '';
+      updateActionButtons(key);
+      updateGlobalStatus();
     }
 
-    async function attachNotifications(id, characteristic) {
-      try {
-        characteristic.addEventListener('characteristicvaluechanged', (event) => {
-          const value = decodeValue(event.target.value);
-          renderField(id, value);
-          if (id === 'session_state' || id === 'session_token' || id === 'capabilities') {
-            updateActionButtons();
-          }
-        });
-        await characteristic.startNotifications();
-      } catch (err) {
-        console.warn('Notifications non disponibles pour', id, err);
+    function clearFields(key) {
+      for (const field of Object.keys(CHAR_UUIDS)) {
+        if (field === 'session_claim') continue;
+        renderField(key, field, '—');
       }
     }
 
-    async function refreshAll() {
-      if (!service) return;
-      for (const id of READ_FIELDS) {
-        const uuid = CHAR_UUIDS[id];
-        const characteristic = characteristics[id] || await service.getCharacteristic(uuid);
-        characteristics[id] = characteristic;
-        const value = await characteristic.readValue();
-        renderField(id, decodeValue(value));
+    function getSessionState(key) {
+      return (deviceState[key].values.session_state || '').toUpperCase();
+    }
+
+    function getSessionToken(key) {
+      return (deviceState[key].values.session_token || '').trim();
+    }
+
+    function updateActionButtons(key) {
+      const connected = deviceState[key].connected;
+      const sessionState = getSessionState(key);
+      const token = getSessionToken(key);
+      const canAct = connected && sessionState === 'PENDING' && !!token;
+
+      document.getElementById(`approveBtn-${key}`).disabled = !canAct;
+      document.getElementById(`denyBtn-${key}`).disabled = !canAct;
+      document.getElementById(`legacyBtn-${key}`).disabled = !canAct;
+      document.getElementById(`refreshBtn-${key}`).disabled = !connected;
+      document.getElementById(`disconnectBtn-${key}`).disabled = !connected;
+    }
+
+    function updateGlobalStatus() {
+      const connectedKeys = Object.keys(DEVICE_CONFIG).filter(key => deviceState[key].connected);
+
+      globalBadgesEl.innerHTML = '';
+      for (const key of Object.keys(DEVICE_CONFIG)) {
+        const state = getSessionState(key);
+        const label = DEVICE_CONFIG[key].title;
+        let tone = '';
+        let text = `${label} hors ligne`;
+
+        if (deviceState[key].connected) {
+          text = `${label} connectée`;
+          tone = 'accent';
+        }
+
+        if (state === 'PENDING') {
+          text = `${label} validation requise`;
+          tone = 'warn';
+        } else if (state === 'APPROVED' || state === 'CLAIMED') {
+          text = `${label} approuvée`;
+          tone = 'ok';
+        } else if (state === 'DENIED' || state === 'INVALID') {
+          text = `${label} refusée/invalide`;
+          tone = 'bad';
+        } else if (state === 'EXPIRED') {
+          text = `${label} expirée`;
+          tone = 'warn';
+        }
+
+        const badge = document.createElement('div');
+        badge.className = `badge ${tone}`.trim();
+        badge.textContent = text;
+        globalBadgesEl.appendChild(badge);
       }
-      updateActionButtons();
-      setStatus(`Connecté à ${device?.name || 'KILIAN'}.`);
-    }
 
-    async function ensureCharacteristic(id) {
-      if (characteristics[id]) return characteristics[id];
-      const characteristic = await service.getCharacteristic(CHAR_UUIDS[id]);
-      characteristics[id] = characteristic;
-      return characteristic;
-    }
-
-    async function writeAction(verb) {
-      if (!service) {
-        setStatus('Aucune clé connectée.');
+      if (!connectedKeys.length) {
+        globalStatusEl.textContent = 'Aucune clé connectée.';
         return;
       }
 
-      const token = currentToken();
-      const state = currentState();
-      if (!token || state !== 'PENDING') {
-        setStatus(`Action refusée côté page. session_state=${state || 'OFF'}, token=${token ? 'présent' : 'absent'}.`);
-        updateActionButtons();
+      const pending = connectedKeys.filter(key => getSessionState(key) === 'PENDING');
+      if (pending.length === 2) {
+        globalStatusEl.textContent = 'Validation requise sur Clé A et Clé B.';
+        return;
+      }
+      if (pending.length === 1) {
+        globalStatusEl.textContent = `Validation requise sur ${DEVICE_CONFIG[pending[0]].title}.`;
+        return;
+      }
+
+      globalStatusEl.textContent = connectedKeys.length === 2
+        ? 'Clé A et Clé B sont connectées.'
+        : `${DEVICE_CONFIG[connectedKeys[0]].title} est connectée.`;
+    }
+
+    async function attachNotifications(key, field, characteristic) {
+      try {
+        characteristic.addEventListener('characteristicvaluechanged', (event) => {
+          renderField(key, field, decodeValue(event.target.value));
+        });
+        await characteristic.startNotifications();
+      } catch (err) {
+        console.warn(`Notifications non disponibles pour ${field} sur ${key}`, err);
+      }
+    }
+
+    async function refreshDevice(key) {
+      const state = deviceState[key];
+      if (!state.service) return;
+
+      for (const [field, uuid] of Object.entries(CHAR_UUIDS)) {
+        if (field === 'session_claim') continue;
+        const characteristic = state.characteristics[field] || await state.service.getCharacteristic(uuid);
+        state.characteristics[field] = characteristic;
+        const value = await characteristic.readValue();
+        renderField(key, field, decodeValue(value));
+      }
+
+      setStatus(key, `Connectée à ${state.device?.name || DEVICE_CONFIG[key].name}.`);
+    }
+
+    function disconnectDevice(key) {
+      const state = deviceState[key];
+      if (state.device?.gatt?.connected) {
+        state.device.gatt.disconnect();
+      }
+      state.server = null;
+      state.service = null;
+      state.connected = false;
+      state.characteristics = {};
+      clearFields(key);
+      setBadge(key, 'Déconnectée');
+      setStatus(key, 'Déconnectée.');
+      updateActionButtons(key);
+    }
+
+    async function connectDevice(key) {
+      if (!navigator.bluetooth) {
+        setStatus(key, 'Web Bluetooth non disponible sur ce navigateur.');
+        return;
+      }
+
+      const cfg = DEVICE_CONFIG[key];
+      const state = deviceState[key];
+
+      try {
+        clearFields(key);
+        setBadge(key, 'Connexion...', 'warn');
+        setStatus(key, `Recherche de ${cfg.name}...`);
+
+        state.device = await navigator.bluetooth.requestDevice({
+          filters: [{ name: cfg.name }],
+          optionalServices: [SERVICE_UUID]
+        });
+
+        state.device.addEventListener('gattserverdisconnected', () => {
+          disconnectDevice(key);
+        }, { once: true });
+
+        state.server = await state.device.gatt.connect();
+        state.service = await state.server.getPrimaryService(SERVICE_UUID);
+
+        for (const [field, uuid] of Object.entries(CHAR_UUIDS)) {
+          const characteristic = await state.service.getCharacteristic(uuid);
+          state.characteristics[field] = characteristic;
+          if (field !== 'session_claim') {
+            await attachNotifications(key, field, characteristic);
+          }
+        }
+
+        state.connected = true;
+        setBadge(key, 'Connectée', 'ok');
+        await refreshDevice(key);
+      } catch (err) {
+        console.error(err);
+        if (state.device?.gatt?.connected) state.device.gatt.disconnect();
+        state.server = null;
+        state.service = null;
+        state.connected = false;
+        state.characteristics = {};
+        clearFields(key);
+        setBadge(key, 'Erreur', 'bad');
+        setStatus(key, `Connexion annulée ou échouée : ${err.message}`);
+        updateActionButtons(key);
+      }
+    }
+
+    async function writeAction(key, verb) {
+      const state = deviceState[key];
+      const token = getSessionToken(key);
+      const sessionState = getSessionState(key);
+
+      if (!state.connected || !state.characteristics.session_claim) {
+        setStatus(key, 'Action impossible : clé non connectée.');
+        return;
+      }
+
+      if (sessionState !== 'PENDING' || !token) {
+        setStatus(key, 'Aucune validation en attente sur cette clé.');
         return;
       }
 
       try {
         const payload = `${verb}|${token}`;
-        const writer = await ensureCharacteristic('session_claim');
-        await writer.writeValue(new TextEncoder().encode(payload));
-        setStatus(`Commande envoyée : ${payload}`);
-        setTimeout(refreshAll, 250);
-        setTimeout(refreshAll, 1100);
+        const data = new TextEncoder().encode(payload);
+        await state.characteristics.session_claim.writeValue(data);
+        setStatus(key, `Commande envoyée : ${payload}`);
+        setTimeout(() => refreshDevice(key).catch(console.error), 250);
       } catch (err) {
-        setStatus(`Échec d'écriture ${verb} : ${err.message}`);
+        setStatus(key, `Échec d’envoi ${verb} : ${err.message}`);
       }
     }
 
-    async function connectBluetooth() {
-      if (!navigator.bluetooth) {
-        setStatus('Web Bluetooth non disponible sur ce navigateur.');
+    function applyHashTarget() {
+      const valid = hash === 'a' || hash === 'b';
+      document.getElementById('card-a').classList.toggle('target', hash === 'a');
+      document.getElementById('card-b').classList.toggle('target', hash === 'b');
+
+      if (!valid) {
+        targetHintEl.textContent = 'Console unifiée : connecte Clé A, Clé B, ou les deux selon ton besoin.';
         return;
       }
 
-      try {
-        clearFields();
-        setStatus(requestedDevice ? `Recherche de ${requestedDevice}...` : 'Recherche d’une clé KILIAN BLE2...');
-        const filters = requestedDevice
-          ? [{ name: requestedDevice }]
-          : [{ namePrefix: 'KILIAN-' }];
-
-        device = await navigator.bluetooth.requestDevice({
-          filters,
-          optionalServices: [SERVICE_UUID]
-        });
-
-        device.addEventListener('gattserverdisconnected', () => {
-          setStatus('Clé déconnectée.');
-          server = null;
-          service = null;
-          for (const key of Object.keys(characteristics)) delete characteristics[key];
-          clearFields();
-        });
-
-        server = await device.gatt.connect();
-        service = await server.getPrimaryService(SERVICE_UUID);
-
-        for (const id of READ_FIELDS) {
-          const characteristic = await service.getCharacteristic(CHAR_UUIDS[id]);
-          characteristics[id] = characteristic;
-          await attachNotifications(id, characteristic);
-        }
-
-        await refreshAll();
-      } catch (err) {
-        if (device?.gatt?.connected) device.gatt.disconnect();
-        server = null;
-        service = null;
-        for (const key of Object.keys(characteristics)) delete characteristics[key];
-        clearFields();
-        setStatus(`Connexion annulée ou échouée : ${err.message}`);
-      }
+      const label = hash === 'a' ? 'Clé A' : 'Clé B';
+      targetHintEl.textContent = `Raccourci QR actif : ${label}. Tu peux rester sur cette même page pour gérer les deux clés.`;
+      setTimeout(() => {
+        document.getElementById(`card-${hash}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
     }
 
-    function disconnectBluetooth() {
-      if (device?.gatt?.connected) device.gatt.disconnect();
-      server = null;
-      service = null;
-      for (const key of Object.keys(characteristics)) delete characteristics[key];
-      clearFields();
-      setStatus('Déconnecté.');
+    function bindUiForKey(key) {
+      document.getElementById(`connectBtn-${key}`).addEventListener('click', () => connectDevice(key));
+      document.getElementById(`refreshBtn-${key}`).addEventListener('click', () => refreshDevice(key));
+      document.getElementById(`disconnectBtn-${key}`).addEventListener('click', () => disconnectDevice(key));
+      document.getElementById(`approveBtn-${key}`).addEventListener('click', () => writeAction(key, 'APPROVE'));
+      document.getElementById(`denyBtn-${key}`).addEventListener('click', () => writeAction(key, 'DENY'));
+      document.getElementById(`legacyBtn-${key}`).addEventListener('click', () => writeAction(key, 'CLAIM'));
+      updateActionButtons(key);
     }
 
-    updateTargetUi();
-    document.getElementById('connectBtn').addEventListener('click', connectBluetooth);
-    document.getElementById('refreshBtn').addEventListener('click', refreshAll);
-    document.getElementById('disconnectBtn').addEventListener('click', disconnectBluetooth);
-    approveBtn.addEventListener('click', () => writeAction('APPROVE'));
-    denyBtn.addEventListener('click', () => writeAction('DENY'));
-    claimBtn.addEventListener('click', () => writeAction('CLAIM'));
+    for (const key of Object.keys(DEVICE_CONFIG)) {
+      bindUiForKey(key);
+      clearFields(key);
+    }
+
+    applyHashTarget();
+    updateGlobalStatus();
   </script>
 </body>
 </html>
