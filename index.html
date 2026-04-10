@@ -12,7 +12,7 @@
       --line: #2a3444;
       --text: #f3f6fb;
       --muted: #aab6c8;
-      --ok: #1f9d55;
+      --ok: #16a34a;
       --warn: #d97706;
       --bad: #dc2626;
       --accent: #3b82f6;
@@ -22,26 +22,29 @@
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     body { padding: 18px; }
-    .wrap { max-width: 1200px; margin: 0 auto; }
+    .wrap { max-width: 1220px; margin: 0 auto; }
     h1 { margin: 0 0 8px; font-size: 1.9rem; }
     p { color: var(--muted); }
 
-    .hero, .card, .global-card {
+    .hero, .card, .global-card, .compat-card {
       background: linear-gradient(180deg, var(--panel), #121821);
       border: 1px solid var(--line);
       border-radius: 18px;
       box-shadow: 0 8px 24px rgba(0,0,0,.22);
     }
 
-    .hero {
-      padding: 18px;
-      margin-bottom: 16px;
+    .hero, .global-card, .compat-card { padding: 18px; margin-bottom: 16px; }
+
+    .compat-card {
+      display: none;
+      border-color: #7c2d12;
+      background: linear-gradient(180deg, #22140f, #17120f);
     }
 
-    .global-card {
-      padding: 14px 16px;
-      margin-bottom: 16px;
-    }
+    .compat-card.show { display: block; }
+    .compat-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
+    .compat-reasons { margin: 10px 0 0; padding-left: 18px; color: var(--text); }
+    .compat-reasons li { margin: 8px 0; }
 
     .global-line {
       display: flex;
@@ -57,10 +60,7 @@
       gap: 16px;
     }
 
-    .card {
-      padding: 16px;
-    }
-
+    .card { padding: 16px; }
     .card.target {
       border-color: var(--accent);
       box-shadow: 0 0 0 1px rgba(59,130,246,.35), 0 10px 28px rgba(0,0,0,.28);
@@ -85,193 +85,125 @@
     .badge {
       display: inline-flex;
       align-items: center;
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-size: .82rem;
-      line-height: 1;
-      border: 1px solid var(--line);
-      color: var(--muted);
-      background: #111722;
-      white-space: nowrap;
-    }
-
-    .badge.ok { color: #d5f7e6; border-color: rgba(31,157,85,.35); background: rgba(31,157,85,.18); }
-    .badge.warn { color: #ffe8c2; border-color: rgba(217,119,6,.35); background: rgba(217,119,6,.18); }
-    .badge.bad { color: #ffd8d8; border-color: rgba(220,38,38,.35); background: rgba(220,38,38,.18); }
-    .badge.accent { color: #dceaff; border-color: rgba(59,130,246,.35); background: rgba(59,130,246,.18); }
-
-    .status-box {
-      padding: 12px 14px;
-      border-radius: 14px;
-      background: #101722;
-      border: 1px solid var(--line);
-      margin-bottom: 12px;
-      min-height: 48px;
-      display: flex;
-      align-items: center;
-    }
-
-    .btn-row, .action-row {
-      display: flex;
-      flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 12px;
+      border-radius: 999px;
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--muted);
+      font-size: .84rem;
     }
 
-    button {
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #4b5563; }
+    .dot.ok { background: var(--ok); }
+    .dot.warn { background: var(--warn); }
+    .dot.bad { background: var(--bad); }
+
+    .status {
+      padding: 11px 12px;
+      border-radius: 14px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      margin: 10px 0 14px;
+      white-space: pre-wrap;
+      min-height: 48px;
+    }
+
+    .row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .row + .row { margin-top: 10px; }
+
+    button, a.fakebtn {
       border: 0;
       border-radius: 12px;
-      padding: 11px 14px;
-      font-size: .97rem;
+      padding: 12px 16px;
+      font-size: .98rem;
       cursor: pointer;
-      transition: transform .06s ease, opacity .12s ease, background .12s ease;
+      color: white;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
     }
 
-    button:hover { transform: translateY(-1px); }
-    button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-    .primary { background: var(--accent); color: white; }
-    .primary:hover { background: var(--accent-2); }
-    .secondary { background: var(--panel-2); color: white; border: 1px solid var(--line); }
-    .success { background: var(--ok); color: white; }
-    .danger { background: var(--bad); color: white; }
-    .ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
+    button.primary, a.fakebtn.primary { background: var(--accent); }
+    button.primary:hover, a.fakebtn.primary:hover { background: var(--accent-2); }
+    button.secondary, a.fakebtn.secondary { background: #2a3240; }
+    button.ok { background: var(--ok); }
+    button.warn { background: var(--warn); color: #111827; }
+    button.bad { background: var(--bad); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
 
-    .info-grid {
+    .grid-fields {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 10px;
-      margin-top: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
     }
 
-    .mini {
-      background: #101722;
+    .field {
+      background: rgba(255,255,255,.02);
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 12px;
-      min-height: 78px;
+      min-height: 82px;
     }
 
-    .label {
-      font-size: .8rem;
+    .label { font-size: .82rem; color: var(--muted); }
+    .value { font-size: 1rem; margin-top: 6px; word-break: break-word; }
+    .value.token { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9rem; }
+
+    .hint {
+      margin-top: 10px;
       color: var(--muted);
-      margin-bottom: 6px;
-    }
-
-    .value {
-      font-size: .98rem;
-      word-break: break-word;
-    }
-
-    .footer-note {
-      margin-top: 18px;
       font-size: .93rem;
-      color: var(--muted);
+      line-height: 1.45;
     }
 
-    code {
-      background: #0e141d;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 2px 6px;
-      color: #dbeafe;
+    .section-title { font-size: .94rem; color: var(--muted); margin-top: 14px; margin-bottom: 8px; }
+    .small { font-size: .88rem; color: var(--muted); }
+    .hidden { display: none !important; }
+
+    @media (max-width: 760px) {
+      .grid-fields { grid-template-columns: 1fr; }
+      body { padding: 14px; }
+      h1 { font-size: 1.6rem; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <section class="hero">
+    <div class="hero">
       <h1>KILIAN Mobile Console BLE2</h1>
-      <p>
-        Console unifiée pour <strong>Clé A</strong> et <strong>Clé B</strong>.
-        Les QR <code>a.html</code> et <code>b.html</code> peuvent continuer à rediriger ici via <code>#a</code> et <code>#b</code>.
-      </p>
-      <p id="targetHint"></p>
-    </section>
+      <p id="heroText">Console unifiée pour Clé A et Clé B. Les QR <code>a.html</code> et <code>b.html</code> restent compatibles.</p>
+      <div class="small">Validation humaine : <code>APPROVE|token</code>, <code>DENY|token</code>, <code>CLAIM|token</code> legacy.</div>
+    </div>
 
-    <section class="global-card">
-      <div class="global-line">
-        <div>
-          <strong>État global</strong>
-          <div id="globalStatus" style="margin-top:6px; color: var(--muted);">Aucune clé connectée.</div>
-        </div>
-        <div id="globalBadges" class="btn-row" style="margin-bottom:0;"></div>
+    <div id="compatCard" class="compat-card" aria-live="polite">
+      <div class="compat-title">Bluetooth n’est pas disponible dans ce navigateur</div>
+      <p id="compatSummary">Cette page s’est ouverte, mais le navigateur actuel n’expose pas Web Bluetooth.</p>
+      <ul id="compatReasons" class="compat-reasons"></ul>
+      <div class="row" style="margin-top:14px">
+        <a id="openChromeBtn" class="fakebtn primary" href="#">Ouvrir dans Chrome</a>
+        <button id="copyLinkBtn" class="secondary">Copier le lien</button>
+        <button id="continueBtn" class="secondary">Continuer quand même</button>
       </div>
-    </section>
+      <div class="hint">Astuce : garde un seul QR KILIAN. Cette page détecte automatiquement si le navigateur courant peut utiliser Bluetooth.</div>
+    </div>
 
-    <section class="grid-main">
-      <article class="card" id="card-a">
-        <div class="card-header">
-          <div class="card-title">Clé A <span class="badge accent">KILIAN-A</span></div>
-          <div id="deviceBadge-a" class="badge">Déconnectée</div>
+    <div id="mainUi">
+      <div class="global-card">
+        <div class="global-line">
+          <div>
+            <div style="font-weight:700; margin-bottom:4px">État global</div>
+            <div class="small" id="globalSummary">Aucune clé connectée.</div>
+          </div>
+          <div class="badge" id="globalCompatBadge"><span class="dot" id="compatDot"></span><span id="compatLabel">Compatibilité inconnue</span></div>
         </div>
+      </div>
 
-        <div class="status-box" id="status-a">Déconnectée.</div>
-
-        <div class="btn-row">
-          <button class="primary" id="connectBtn-a">Connecter A</button>
-          <button class="secondary" id="refreshBtn-a">Rafraîchir</button>
-          <button class="secondary" id="disconnectBtn-a">Déconnecter</button>
-        </div>
-
-        <div class="action-row">
-          <button class="success" id="approveBtn-a">Approuver</button>
-          <button class="danger" id="denyBtn-a">Refuser</button>
-          <button class="ghost" id="legacyBtn-a">Legacy CLAIM</button>
-        </div>
-
-        <div class="info-grid">
-          <div class="mini"><div class="label">Rôle</div><div class="value" id="device_role-a">—</div></div>
-          <div class="mini"><div class="label">État système</div><div class="value" id="system_state-a">—</div></div>
-          <div class="mini"><div class="label">État pair</div><div class="value" id="pair_state-a">—</div></div>
-          <div class="mini"><div class="label">Résumé pair</div><div class="value" id="pair_summary-a">—</div></div>
-          <div class="mini"><div class="label">Compteurs</div><div class="value" id="counter_summary-a">—</div></div>
-          <div class="mini"><div class="label">Dernier événement</div><div class="value" id="last_event-a">—</div></div>
-          <div class="mini"><div class="label">Build</div><div class="value" id="build_info-a">—</div></div>
-          <div class="mini"><div class="label">Capacités</div><div class="value" id="capabilities-a">—</div></div>
-          <div class="mini"><div class="label">Session state</div><div class="value" id="session_state-a">—</div></div>
-          <div class="mini"><div class="label">Session token</div><div class="value" id="session_token-a">—</div></div>
-        </div>
-      </article>
-
-      <article class="card" id="card-b">
-        <div class="card-header">
-          <div class="card-title">Clé B <span class="badge accent">KILIAN-B</span></div>
-          <div id="deviceBadge-b" class="badge">Déconnectée</div>
-        </div>
-
-        <div class="status-box" id="status-b">Déconnectée.</div>
-
-        <div class="btn-row">
-          <button class="primary" id="connectBtn-b">Connecter B</button>
-          <button class="secondary" id="refreshBtn-b">Rafraîchir</button>
-          <button class="secondary" id="disconnectBtn-b">Déconnecter</button>
-        </div>
-
-        <div class="action-row">
-          <button class="success" id="approveBtn-b">Approuver</button>
-          <button class="danger" id="denyBtn-b">Refuser</button>
-          <button class="ghost" id="legacyBtn-b">Legacy CLAIM</button>
-        </div>
-
-        <div class="info-grid">
-          <div class="mini"><div class="label">Rôle</div><div class="value" id="device_role-b">—</div></div>
-          <div class="mini"><div class="label">État système</div><div class="value" id="system_state-b">—</div></div>
-          <div class="mini"><div class="label">État pair</div><div class="value" id="pair_state-b">—</div></div>
-          <div class="mini"><div class="label">Résumé pair</div><div class="value" id="pair_summary-b">—</div></div>
-          <div class="mini"><div class="label">Compteurs</div><div class="value" id="counter_summary-b">—</div></div>
-          <div class="mini"><div class="label">Dernier événement</div><div class="value" id="last_event-b">—</div></div>
-          <div class="mini"><div class="label">Build</div><div class="value" id="build_info-b">—</div></div>
-          <div class="mini"><div class="label">Capacités</div><div class="value" id="capabilities-b">—</div></div>
-          <div class="mini"><div class="label">Session state</div><div class="value" id="session_state-b">—</div></div>
-          <div class="mini"><div class="label">Session token</div><div class="value" id="session_token-b">—</div></div>
-        </div>
-      </article>
-    </section>
-
-    <p class="footer-note">
-      Utilise Chrome Android. Le navigateur exige toujours un geste utilisateur sur <code>Connecter</code>.
-      Pour agir, ouvre <code>ADMIN → MOBILE DASH</code> sur la clé concernée.
-    </p>
+      <div class="grid-main" id="devicesGrid"></div>
+    </div>
   </div>
 
   <script>
@@ -290,293 +222,376 @@
       session_claim: '8f4e100b-2b65-4d1a-9f5d-6b6f9cf50001'
     };
 
-    const decoder = new TextDecoder();
-    const hash = (window.location.hash || '').replace('#', '').toLowerCase();
-    const targetHintEl = document.getElementById('targetHint');
-    const globalStatusEl = document.getElementById('globalStatus');
-    const globalBadgesEl = document.getElementById('globalBadges');
+    const READ_FIELDS = [
+      'device_role','system_state','pair_state','pair_summary','counter_summary',
+      'last_event','build_info','capabilities','session_state','session_token'
+    ];
 
-    const DEVICE_CONFIG = {
-      a: { key: 'a', name: 'KILIAN-A', title: 'Clé A' },
-      b: { key: 'b', name: 'KILIAN-B', title: 'Clé B' }
+    const DEVICES = {
+      A: { id: 'A', name: 'KILIAN-A', anchor: 'a', title: 'Clé A', state: createState('KILIAN-A') },
+      B: { id: 'B', name: 'KILIAN-B', anchor: 'b', title: 'Clé B', state: createState('KILIAN-B') }
     };
 
-    const deviceState = {};
-    for (const key of Object.keys(DEVICE_CONFIG)) {
-      deviceState[key] = {
+    const decoder = new TextDecoder();
+    const encoder = new TextEncoder();
+    const hash = (window.location.hash || '').replace('#', '').toLowerCase();
+    const preselect = hash === 'a' ? 'A' : hash === 'b' ? 'B' : null;
+
+    const compatCard = document.getElementById('compatCard');
+    const compatReasonsEl = document.getElementById('compatReasons');
+    const compatSummaryEl = document.getElementById('compatSummary');
+    const openChromeBtn = document.getElementById('openChromeBtn');
+    const copyLinkBtn = document.getElementById('copyLinkBtn');
+    const continueBtn = document.getElementById('continueBtn');
+    const mainUi = document.getElementById('mainUi');
+    const devicesGrid = document.getElementById('devicesGrid');
+    const globalSummary = document.getElementById('globalSummary');
+    const compatDot = document.getElementById('compatDot');
+    const compatLabel = document.getElementById('compatLabel');
+
+    function createState(expectedName) {
+      return {
+        expectedName,
         device: null,
         server: null,
         service: null,
         characteristics: {},
-        values: {},
-        connected: false
+        values: Object.fromEntries(READ_FIELDS.map(id => [id, '—']))
       };
     }
 
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function buildCard(deviceKey) {
+      const d = DEVICES[deviceKey];
+      const targetClass = preselect === deviceKey ? ' target' : '';
+      const html = `
+        <section class="card${targetClass}" id="card-${deviceKey}">
+          <div class="card-header">
+            <div class="card-title">${escapeHtml(d.title)} <span class="small">${escapeHtml(d.name)}</span></div>
+            <div class="badge" id="badge-${deviceKey}"><span class="dot" id="dot-${deviceKey}"></span><span id="badgeLabel-${deviceKey}">Déconnectée</span></div>
+          </div>
+
+          <div class="status" id="status-${deviceKey}">Déconnectée.</div>
+
+          <div class="row">
+            <button class="primary" id="connect-${deviceKey}">Connecter</button>
+            <button class="secondary" id="refresh-${deviceKey}">Rafraîchir</button>
+            <button class="secondary" id="disconnect-${deviceKey}">Déconnecter</button>
+          </div>
+
+          <div class="section-title">Validation humaine</div>
+          <div class="row">
+            <button class="ok" id="approve-${deviceKey}" disabled>APPROVE</button>
+            <button class="bad" id="deny-${deviceKey}" disabled>DENY</button>
+            <button class="warn" id="claim-${deviceKey}" disabled>CLAIM legacy</button>
+          </div>
+
+          <div class="hint">Ouvre <code>ADMIN</code> → <code>MOBILE DASH</code> sur la clé. L’action est disponible quand <code>session_state = PENDING</code>.</div>
+
+          <div class="grid-fields">
+            ${READ_FIELDS.map(field => `
+              <div class="field">
+                <div class="label">${escapeHtml(field)}</div>
+                <div class="value${field === 'session_token' ? ' token' : ''}" id="${field}-${deviceKey}">—</div>
+              </div>
+            `).join('')}
+          </div>
+        </section>`;
+      devicesGrid.insertAdjacentHTML('beforeend', html);
+    }
+
+    function setBadge(deviceKey, label, level = 'neutral') {
+      const dot = document.getElementById(`dot-${deviceKey}`);
+      const text = document.getElementById(`badgeLabel-${deviceKey}`);
+      dot.className = 'dot';
+      if (level === 'ok') dot.classList.add('ok');
+      if (level === 'warn') dot.classList.add('warn');
+      if (level === 'bad') dot.classList.add('bad');
+      text.textContent = label;
+    }
+
+    function setStatus(deviceKey, text) {
+      document.getElementById(`status-${deviceKey}`).textContent = text;
+    }
+
+    function renderField(deviceKey, field, value) {
+      DEVICES[deviceKey].state.values[field] = value || '—';
+      document.getElementById(`${field}-${deviceKey}`).textContent = value || '—';
+      updateActionButtons(deviceKey);
+      updateGlobalSummary();
+    }
+
+    function clearFields(deviceKey) {
+      for (const field of READ_FIELDS) renderField(deviceKey, field, '—');
+    }
+
+    function getValue(deviceKey, field) {
+      return DEVICES[deviceKey].state.values[field] || '—';
+    }
+
+    function currentState(deviceKey) {
+      const value = getValue(deviceKey, 'session_state');
+      return value === '—' ? '' : value.toUpperCase();
+    }
+
+    function currentToken(deviceKey) {
+      const value = getValue(deviceKey, 'session_token');
+      return value === '—' ? '' : value;
+    }
+
+    function updateActionButtons(deviceKey) {
+      const st = DEVICES[deviceKey].state;
+      const enabled = !!st.service && !!currentToken(deviceKey) && currentState(deviceKey) === 'PENDING';
+      document.getElementById(`approve-${deviceKey}`).disabled = !enabled;
+      document.getElementById(`deny-${deviceKey}`).disabled = !enabled;
+      document.getElementById(`claim-${deviceKey}`).disabled = !enabled;
+    }
+
+    function updateGlobalSummary() {
+      const lines = [];
+      for (const key of ['A','B']) {
+        const st = DEVICES[key].state;
+        const name = DEVICES[key].title;
+        if (st.service) {
+          const sys = getValue(key, 'system_state');
+          const sess = getValue(key, 'session_state');
+          lines.push(`${name} connectée — système ${sys}, session ${sess}.`);
+        } else {
+          lines.push(`${name} non connectée.`);
+        }
+      }
+      globalSummary.textContent = lines.join(' ');
+    }
+
     function decodeValue(dataView) {
-      return decoder.decode(
-        dataView.buffer.slice(dataView.byteOffset, dataView.byteOffset + dataView.byteLength)
-      ).trim();
+      return decoder.decode(dataView.buffer.slice(dataView.byteOffset, dataView.byteOffset + dataView.byteLength)).trim();
     }
 
-    function fieldId(field, key) {
-      return `${field}-${key}`;
-    }
-
-    function setStatus(key, text) {
-      document.getElementById(`status-${key}`).textContent = text;
-      updateGlobalStatus();
-    }
-
-    function setBadge(key, text, tone = '') {
-      const el = document.getElementById(`deviceBadge-${key}`);
-      el.textContent = text;
-      el.className = `badge${tone ? ' ' + tone : ''}`;
-    }
-
-    function renderField(key, field, value) {
-      const el = document.getElementById(fieldId(field, key));
-      if (el) el.textContent = value || '—';
-      deviceState[key].values[field] = value || '';
-      updateActionButtons(key);
-      updateGlobalStatus();
-    }
-
-    function clearFields(key) {
-      for (const field of Object.keys(CHAR_UUIDS)) {
-        if (field === 'session_claim') continue;
-        renderField(key, field, '—');
-      }
-    }
-
-    function getSessionState(key) {
-      return (deviceState[key].values.session_state || '').toUpperCase();
-    }
-
-    function getSessionToken(key) {
-      return (deviceState[key].values.session_token || '').trim();
-    }
-
-    function updateActionButtons(key) {
-      const connected = deviceState[key].connected;
-      const sessionState = getSessionState(key);
-      const token = getSessionToken(key);
-      const canAct = connected && sessionState === 'PENDING' && !!token;
-
-      document.getElementById(`approveBtn-${key}`).disabled = !canAct;
-      document.getElementById(`denyBtn-${key}`).disabled = !canAct;
-      document.getElementById(`legacyBtn-${key}`).disabled = !canAct;
-      document.getElementById(`refreshBtn-${key}`).disabled = !connected;
-      document.getElementById(`disconnectBtn-${key}`).disabled = !connected;
-    }
-
-    function updateGlobalStatus() {
-      const connectedKeys = Object.keys(DEVICE_CONFIG).filter(key => deviceState[key].connected);
-
-      globalBadgesEl.innerHTML = '';
-      for (const key of Object.keys(DEVICE_CONFIG)) {
-        const state = getSessionState(key);
-        const label = DEVICE_CONFIG[key].title;
-        let tone = '';
-        let text = `${label} hors ligne`;
-
-        if (deviceState[key].connected) {
-          text = `${label} connectée`;
-          tone = 'accent';
-        }
-
-        if (state === 'PENDING') {
-          text = `${label} validation requise`;
-          tone = 'warn';
-        } else if (state === 'APPROVED' || state === 'CLAIMED') {
-          text = `${label} approuvée`;
-          tone = 'ok';
-        } else if (state === 'DENIED' || state === 'INVALID') {
-          text = `${label} refusée/invalide`;
-          tone = 'bad';
-        } else if (state === 'EXPIRED') {
-          text = `${label} expirée`;
-          tone = 'warn';
-        }
-
-        const badge = document.createElement('div');
-        badge.className = `badge ${tone}`.trim();
-        badge.textContent = text;
-        globalBadgesEl.appendChild(badge);
-      }
-
-      if (!connectedKeys.length) {
-        globalStatusEl.textContent = 'Aucune clé connectée.';
-        return;
-      }
-
-      const pending = connectedKeys.filter(key => getSessionState(key) === 'PENDING');
-      if (pending.length === 2) {
-        globalStatusEl.textContent = 'Validation requise sur Clé A et Clé B.';
-        return;
-      }
-      if (pending.length === 1) {
-        globalStatusEl.textContent = `Validation requise sur ${DEVICE_CONFIG[pending[0]].title}.`;
-        return;
-      }
-
-      globalStatusEl.textContent = connectedKeys.length === 2
-        ? 'Clé A et Clé B sont connectées.'
-        : `${DEVICE_CONFIG[connectedKeys[0]].title} est connectée.`;
-    }
-
-    async function attachNotifications(key, field, characteristic) {
+    async function attachNotifications(deviceKey, field, characteristic) {
       try {
         characteristic.addEventListener('characteristicvaluechanged', (event) => {
-          renderField(key, field, decodeValue(event.target.value));
+          renderField(deviceKey, field, decodeValue(event.target.value));
         });
         await characteristic.startNotifications();
       } catch (err) {
-        console.warn(`Notifications non disponibles pour ${field} sur ${key}`, err);
+        console.warn('Notifications indisponibles pour', deviceKey, field, err);
       }
     }
 
-    async function refreshDevice(key) {
-      const state = deviceState[key];
-      if (!state.service) return;
-
-      for (const [field, uuid] of Object.entries(CHAR_UUIDS)) {
-        if (field === 'session_claim') continue;
-        const characteristic = state.characteristics[field] || await state.service.getCharacteristic(uuid);
-        state.characteristics[field] = characteristic;
-        const value = await characteristic.readValue();
-        renderField(key, field, decodeValue(value));
-      }
-
-      setStatus(key, `Connectée à ${state.device?.name || DEVICE_CONFIG[key].name}.`);
+    async function ensureCharacteristic(deviceKey, field) {
+      const st = DEVICES[deviceKey].state;
+      if (st.characteristics[field]) return st.characteristics[field];
+      const ch = await st.service.getCharacteristic(CHAR_UUIDS[field]);
+      st.characteristics[field] = ch;
+      return ch;
     }
 
-    function disconnectDevice(key) {
-      const state = deviceState[key];
-      if (state.device?.gatt?.connected) {
-        state.device.gatt.disconnect();
+    async function refreshDevice(deviceKey) {
+      const st = DEVICES[deviceKey].state;
+      if (!st.service) return;
+      for (const field of READ_FIELDS) {
+        const ch = st.characteristics[field] || await st.service.getCharacteristic(CHAR_UUIDS[field]);
+        st.characteristics[field] = ch;
+        const value = await ch.readValue();
+        renderField(deviceKey, field, decodeValue(value));
       }
-      state.server = null;
-      state.service = null;
-      state.connected = false;
-      state.characteristics = {};
-      clearFields(key);
-      setBadge(key, 'Déconnectée');
-      setStatus(key, 'Déconnectée.');
-      updateActionButtons(key);
+      setStatus(deviceKey, `Connectée à ${st.device?.name || DEVICES[deviceKey].name}.`);
+      setBadge(deviceKey, 'Connectée', 'ok');
     }
 
-    async function connectDevice(key) {
+    function resetDeviceState(deviceKey, reason = 'Déconnectée.') {
+      const st = DEVICES[deviceKey].state;
+      st.server = null;
+      st.service = null;
+      st.characteristics = {};
+      clearFields(deviceKey);
+      setStatus(deviceKey, reason);
+      setBadge(deviceKey, 'Déconnectée');
+      updateGlobalSummary();
+    }
+
+    async function connectDevice(deviceKey) {
       if (!navigator.bluetooth) {
-        setStatus(key, 'Web Bluetooth non disponible sur ce navigateur.');
+        setStatus(deviceKey, 'Web Bluetooth non disponible sur ce navigateur.');
         return;
       }
 
-      const cfg = DEVICE_CONFIG[key];
-      const state = deviceState[key];
-
+      const st = DEVICES[deviceKey].state;
       try {
-        clearFields(key);
-        setBadge(key, 'Connexion...', 'warn');
-        setStatus(key, `Recherche de ${cfg.name}...`);
-
-        state.device = await navigator.bluetooth.requestDevice({
-          filters: [{ name: cfg.name }],
+        setStatus(deviceKey, `Recherche de ${DEVICES[deviceKey].name}...`);
+        clearFields(deviceKey);
+        const device = await navigator.bluetooth.requestDevice({
+          filters: [{ name: DEVICES[deviceKey].name }],
           optionalServices: [SERVICE_UUID]
         });
 
-        state.device.addEventListener('gattserverdisconnected', () => {
-          disconnectDevice(key);
-        }, { once: true });
+        st.device = device;
+        device.addEventListener('gattserverdisconnected', () => {
+          resetDeviceState(deviceKey, 'Clé déconnectée.');
+        });
 
-        state.server = await state.device.gatt.connect();
-        state.service = await state.server.getPrimaryService(SERVICE_UUID);
+        st.server = await device.gatt.connect();
+        st.service = await st.server.getPrimaryService(SERVICE_UUID);
 
-        for (const [field, uuid] of Object.entries(CHAR_UUIDS)) {
-          const characteristic = await state.service.getCharacteristic(uuid);
-          state.characteristics[field] = characteristic;
-          if (field !== 'session_claim') {
-            await attachNotifications(key, field, characteristic);
-          }
+        for (const field of READ_FIELDS) {
+          const ch = await st.service.getCharacteristic(CHAR_UUIDS[field]);
+          st.characteristics[field] = ch;
+          await attachNotifications(deviceKey, field, ch);
         }
 
-        state.connected = true;
-        setBadge(key, 'Connectée', 'ok');
-        await refreshDevice(key);
+        await refreshDevice(deviceKey);
       } catch (err) {
-        console.error(err);
-        if (state.device?.gatt?.connected) state.device.gatt.disconnect();
-        state.server = null;
-        state.service = null;
-        state.connected = false;
-        state.characteristics = {};
-        clearFields(key);
-        setBadge(key, 'Erreur', 'bad');
-        setStatus(key, `Connexion annulée ou échouée : ${err.message}`);
-        updateActionButtons(key);
+        try {
+          if (st.device?.gatt?.connected) st.device.gatt.disconnect();
+        } catch {}
+        resetDeviceState(deviceKey, `Connexion annulée ou échouée : ${err.message}`);
       }
     }
 
-    async function writeAction(key, verb) {
-      const state = deviceState[key];
-      const token = getSessionToken(key);
-      const sessionState = getSessionState(key);
+    function disconnectDevice(deviceKey) {
+      const st = DEVICES[deviceKey].state;
+      try {
+        if (st.device?.gatt?.connected) st.device.gatt.disconnect();
+      } catch {}
+      resetDeviceState(deviceKey, 'Déconnectée.');
+    }
 
-      if (!state.connected || !state.characteristics.session_claim) {
-        setStatus(key, 'Action impossible : clé non connectée.');
+    async function writeAction(deviceKey, verb) {
+      const st = DEVICES[deviceKey].state;
+      if (!st.service) {
+        setStatus(deviceKey, 'Aucune clé connectée.');
         return;
       }
-
-      if (sessionState !== 'PENDING' || !token) {
-        setStatus(key, 'Aucune validation en attente sur cette clé.');
+      const token = currentToken(deviceKey);
+      const state = currentState(deviceKey);
+      if (!token || state !== 'PENDING') {
+        setStatus(deviceKey, `Action refusée côté page. session_state=${state || 'OFF'}, token=${token ? 'présent' : 'absent'}.`);
+        updateActionButtons(deviceKey);
         return;
       }
-
       try {
         const payload = `${verb}|${token}`;
-        const data = new TextEncoder().encode(payload);
-        await state.characteristics.session_claim.writeValue(data);
-        setStatus(key, `Commande envoyée : ${payload}`);
-        setTimeout(() => refreshDevice(key).catch(console.error), 250);
+        const writer = await ensureCharacteristic(deviceKey, 'session_claim');
+        await writer.writeValue(encoder.encode(payload));
+        setStatus(deviceKey, `Commande envoyée : ${payload}`);
+        setTimeout(() => refreshDevice(deviceKey), 250);
+        setTimeout(() => refreshDevice(deviceKey), 1100);
       } catch (err) {
-        setStatus(key, `Échec d’envoi ${verb} : ${err.message}`);
+        setStatus(deviceKey, `Échec d'écriture ${verb} : ${err.message}`);
       }
     }
 
-    function applyHashTarget() {
-      const valid = hash === 'a' || hash === 'b';
-      document.getElementById('card-a').classList.toggle('target', hash === 'a');
-      document.getElementById('card-b').classList.toggle('target', hash === 'b');
+    async function computeCompatibility() {
+      const reasons = [];
+      const secure = window.isSecureContext;
+      const hasBluetooth = !!navigator.bluetooth;
+      let availability = null;
 
-      if (!valid) {
-        targetHintEl.textContent = 'Console unifiée : connecte Clé A, Clé B, ou les deux selon ton besoin.';
-        return;
+      if (!secure) reasons.push('La page n’est pas ouverte dans un contexte sécurisé HTTPS.');
+      if (!hasBluetooth) {
+        reasons.push('Ce navigateur n’expose pas l’API Web Bluetooth.');
+      } else {
+        try {
+          if (typeof navigator.bluetooth.getAvailability === 'function') {
+            availability = await navigator.bluetooth.getAvailability();
+            if (availability === false) reasons.push('Bluetooth est indisponible ou désactivé sur cet appareil.');
+          }
+        } catch (err) {
+          reasons.push(`Bluetooth n’a pas pu être vérifié : ${err.message}`);
+        }
       }
 
-      const label = hash === 'a' ? 'Clé A' : 'Clé B';
-      targetHintEl.textContent = `Raccourci QR actif : ${label}. Tu peux rester sur cette même page pour gérer les deux clés.`;
-      setTimeout(() => {
-        document.getElementById(`card-${hash}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 50);
+      return {
+        supported: secure && hasBluetooth,
+        secure,
+        hasBluetooth,
+        availability,
+        reasons
+      };
     }
 
-    function bindUiForKey(key) {
-      document.getElementById(`connectBtn-${key}`).addEventListener('click', () => connectDevice(key));
-      document.getElementById(`refreshBtn-${key}`).addEventListener('click', () => refreshDevice(key));
-      document.getElementById(`disconnectBtn-${key}`).addEventListener('click', () => disconnectDevice(key));
-      document.getElementById(`approveBtn-${key}`).addEventListener('click', () => writeAction(key, 'APPROVE'));
-      document.getElementById(`denyBtn-${key}`).addEventListener('click', () => writeAction(key, 'DENY'));
-      document.getElementById(`legacyBtn-${key}`).addEventListener('click', () => writeAction(key, 'CLAIM'));
-      updateActionButtons(key);
+    function buildChromeIntentUrl() {
+      const current = location.href;
+      const encoded = encodeURIComponent(current);
+      return `intent://${location.host}${location.pathname}${location.search}${location.hash}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encoded};end`;
     }
 
-    for (const key of Object.keys(DEVICE_CONFIG)) {
-      bindUiForKey(key);
-      clearFields(key);
+    async function copyCurrentLink() {
+      try {
+        await navigator.clipboard.writeText(location.href);
+        copyLinkBtn.textContent = 'Lien copié';
+        setTimeout(() => copyLinkBtn.textContent = 'Copier le lien', 1400);
+      } catch {
+        const input = document.createElement('textarea');
+        input.value = location.href;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        input.remove();
+        copyLinkBtn.textContent = 'Lien copié';
+        setTimeout(() => copyLinkBtn.textContent = 'Copier le lien', 1400);
+      }
     }
 
-    applyHashTarget();
-    updateGlobalStatus();
+    async function init() {
+      buildCard('A');
+      buildCard('B');
+      updateGlobalSummary();
+
+      const compat = await computeCompatibility();
+      if (compat.supported) {
+        compatDot.classList.add('ok');
+        compatLabel.textContent = compat.availability === false ? 'Bluetooth indisponible' : 'Web Bluetooth détecté';
+      } else {
+        compatDot.classList.add('warn');
+        compatLabel.textContent = 'Navigateur à remplacer';
+      }
+
+      if (!compat.supported) {
+        compatCard.classList.add('show');
+        compatReasonsEl.innerHTML = compat.reasons.map(r => `<li>${escapeHtml(r)}</li>`).join('');
+        compatSummaryEl.textContent = 'Tu peux rester sur une URL unique KILIAN. Si le navigateur ne convient pas, la page te guide vers une option compatible.';
+      }
+
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      if (isAndroid) {
+        openChromeBtn.href = buildChromeIntentUrl();
+      } else {
+        openChromeBtn.classList.add('hidden');
+      }
+
+      continueBtn.classList.toggle('hidden', compat.supported);
+      continueBtn.addEventListener('click', () => compatCard.classList.remove('show'));
+      copyLinkBtn.addEventListener('click', copyCurrentLink);
+
+      document.getElementById('connect-A').addEventListener('click', () => connectDevice('A'));
+      document.getElementById('refresh-A').addEventListener('click', () => refreshDevice('A'));
+      document.getElementById('disconnect-A').addEventListener('click', () => disconnectDevice('A'));
+      document.getElementById('approve-A').addEventListener('click', () => writeAction('A', 'APPROVE'));
+      document.getElementById('deny-A').addEventListener('click', () => writeAction('A', 'DENY'));
+      document.getElementById('claim-A').addEventListener('click', () => writeAction('A', 'CLAIM'));
+
+      document.getElementById('connect-B').addEventListener('click', () => connectDevice('B'));
+      document.getElementById('refresh-B').addEventListener('click', () => refreshDevice('B'));
+      document.getElementById('disconnect-B').addEventListener('click', () => disconnectDevice('B'));
+      document.getElementById('approve-B').addEventListener('click', () => writeAction('B', 'APPROVE'));
+      document.getElementById('deny-B').addEventListener('click', () => writeAction('B', 'DENY'));
+      document.getElementById('claim-B').addEventListener('click', () => writeAction('B', 'CLAIM'));
+
+      if (preselect) {
+        document.getElementById(`card-${preselect}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    init();
   </script>
 </body>
 </html>
