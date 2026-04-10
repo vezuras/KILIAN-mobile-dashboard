@@ -66,16 +66,17 @@
       width: fit-content;
     }
 
-    .browser-field {
+    .browser-field, .field {
       background: rgba(255,255,255,.02);
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 12px;
-      min-height: 82px;
     }
 
-    .browser-field .label { font-size: .82rem; color: var(--muted); }
-    .browser-field .value { font-size: 1rem; margin-top: 6px; word-break: break-word; }
+    .browser-field { min-height: 82px; }
+    .label { font-size: .82rem; color: var(--muted); }
+    .value { font-size: 1rem; margin-top: 6px; word-break: break-word; }
+    .value.token { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9rem; }
 
     .dot { width: 10px; height: 10px; border-radius: 50%; background: #4b5563; }
     .dot.ok { background: var(--ok); }
@@ -160,17 +161,7 @@
       margin-top: 12px;
     }
 
-    .field {
-      background: rgba(255,255,255,.02);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 12px;
-      min-height: 82px;
-    }
-
-    .label { font-size: .82rem; color: var(--muted); }
-    .value { font-size: 1rem; margin-top: 6px; word-break: break-word; }
-    .value.token { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9rem; }
+    .field { min-height: 82px; }
 
     .hint {
       margin-top: 10px;
@@ -182,8 +173,36 @@
     .section-title { font-size: .94rem; color: var(--muted); margin-top: 14px; margin-bottom: 8px; }
     .small { font-size: .88rem; color: var(--muted); }
 
+    .code-wrap {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+      margin-top: 12px;
+    }
+
+    .code-input {
+      width: 100%;
+      min-height: 44px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #0f1728;
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 1rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .code-helper {
+      margin-top: 8px;
+      font-size: .86rem;
+      color: var(--muted);
+    }
+
     @media (max-width: 760px) {
       .grid-fields, .browser-grid { grid-template-columns: 1fr; }
+      .code-wrap { grid-template-columns: 1fr; }
       body { padding: 14px; }
       h1 { font-size: 1.6rem; }
     }
@@ -310,7 +329,8 @@
         server: null,
         service: null,
         characteristics: {},
-        values: Object.fromEntries(READ_FIELDS.map(id => [id, '—']))
+        values: Object.fromEntries(READ_FIELDS.map(id => [id, '—'])),
+        displayCode: ''
       };
     }
 
@@ -341,6 +361,15 @@
             <button class="secondary" id="disconnect-${deviceKey}">Déconnecter</button>
           </div>
 
+          <div class="section-title">Code visuel OLED</div>
+          <div class="code-wrap">
+            <div>
+              <input inputmode="numeric" pattern="[0-9]*" maxlength="4" class="code-input" id="code-${deviceKey}" placeholder="0000">
+              <div class="code-helper" id="codeHelp-${deviceKey}">Entre les 4 chiffres affichés sur l’écran OLED de la clé.</div>
+            </div>
+            <button class="secondary" id="clearCode-${deviceKey}">Effacer</button>
+          </div>
+
           <div class="section-title">Validation humaine</div>
           <div class="row">
             <button class="ok" id="approve-${deviceKey}" disabled>APPROVE</button>
@@ -348,7 +377,7 @@
             <button class="warn" id="claim-${deviceKey}" disabled>CLAIM legacy</button>
           </div>
 
-          <div class="hint">Ouvre <code>ADMIN</code> → <code>MOBILE DASH</code> sur la clé. L’action est disponible quand <code>session_state = PENDING</code>.</div>
+          <div class="hint">Cette version demande le code OLED avant d’activer l’action, mais la commande BLE reste inchangée pour rester compatible avec le firmware v4 actuel.</div>
 
           <div class="grid-fields">
             ${READ_FIELDS.map(field => `
@@ -401,12 +430,30 @@
       return value === '—' ? '' : value;
     }
 
+    function codeValue(deviceKey) {
+      return DEVICES[deviceKey].state.displayCode || '';
+    }
+
+    function isCodeValid(deviceKey) {
+      return /^\d{4}$/.test(codeValue(deviceKey));
+    }
+
+    function updateCodeHelp(deviceKey) {
+      const el = document.getElementById(`codeHelp-${deviceKey}`);
+      if (isCodeValid(deviceKey)) {
+        el.textContent = 'Code OLED saisi. Tu peux maintenant valider si la session est en attente.';
+      } else {
+        el.textContent = 'Entre les 4 chiffres affichés sur l’écran OLED de la clé.';
+      }
+    }
+
     function updateActionButtons(deviceKey) {
       const st = DEVICES[deviceKey].state;
-      const enabled = !!st.service && !!currentToken(deviceKey) && currentState(deviceKey) === 'PENDING';
+      const enabled = !!st.service && !!currentToken(deviceKey) && currentState(deviceKey) === 'PENDING' && isCodeValid(deviceKey);
       document.getElementById(`approve-${deviceKey}`).disabled = !enabled;
       document.getElementById(`deny-${deviceKey}`).disabled = !enabled;
       document.getElementById(`claim-${deviceKey}`).disabled = !enabled;
+      updateCodeHelp(deviceKey);
     }
 
     function updateGlobalSummary() {
@@ -472,6 +519,26 @@
       updateGlobalSummary();
     }
 
+    function bindCodeInput(deviceKey) {
+      const input = document.getElementById(`code-${deviceKey}`);
+      const clear = document.getElementById(`clearCode-${deviceKey}`);
+
+      input.addEventListener('input', () => {
+        const cleaned = input.value.replace(/\D/g, '').slice(0, 4);
+        input.value = cleaned;
+        DEVICES[deviceKey].state.displayCode = cleaned;
+        updateActionButtons(deviceKey);
+      });
+
+      clear.addEventListener('click', () => {
+        input.value = '';
+        DEVICES[deviceKey].state.displayCode = '';
+        updateActionButtons(deviceKey);
+      });
+
+      updateActionButtons(deviceKey);
+    }
+
     async function connectDevice(deviceKey) {
       if (!navigator.bluetooth) {
         setStatus(deviceKey, 'Web Bluetooth non disponible sur ce navigateur.');
@@ -531,11 +598,16 @@
         updateActionButtons(deviceKey);
         return;
       }
+      if (!isCodeValid(deviceKey)) {
+        setStatus(deviceKey, 'Entre d’abord les 4 chiffres OLED pour confirmer la bonne clé.');
+        updateActionButtons(deviceKey);
+        return;
+      }
       try {
         const payload = `${verb}|${token}`;
         const writer = await ensureCharacteristic(deviceKey, 'session_claim');
         await writer.writeValue(encoder.encode(payload));
-        setStatus(deviceKey, `Commande envoyée : ${payload}`);
+        setStatus(deviceKey, `Commande envoyée : ${payload} | Code OLED confirmé localement : ${codeValue(deviceKey)}`);
         setTimeout(() => refreshDevice(deviceKey), 250);
         setTimeout(() => refreshDevice(deviceKey), 1100);
       } catch (err) {
@@ -628,6 +700,8 @@
     async function init() {
       buildCard('A');
       buildCard('B');
+      bindCodeInput('A');
+      bindCodeInput('B');
       updateGlobalSummary();
 
       const compat = await computeCompatibility();
