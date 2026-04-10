@@ -1,45 +1,123 @@
-
 <!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KILIAN BLE1 Dashboard DEV</title>
+  <title>KILIAN BLE2 Dashboard</title>
   <style>
-    body { font-family: system-ui, sans-serif; margin: 0; padding: 20px; background: #0f1115; color: #f2f4f8; }
-    .wrap { max-width: 860px; margin: 0 auto; }
-    h1 { margin-top: 0; }
-    .card { background: #171b22; border: 1px solid #2a3240; border-radius: 16px; padding: 16px; margin: 14px 0; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-    .label { font-size: 0.85rem; opacity: 0.75; }
-    .value { font-size: 1.05rem; margin-top: 6px; word-break: break-word; }
-    button { border: 0; border-radius: 12px; padding: 12px 16px; font-size: 1rem; cursor: pointer; margin-right: 8px; margin-bottom: 8px; }
-    button.primary { background: #3b82f6; color: white; }
-    button.secondary { background: #2a3240; color: white; }
-    .status { padding: 10px 12px; border-radius: 12px; background: #121821; border: 1px solid #2a3240; margin: 10px 0 16px; }
-    code { background: #11151c; padding: 2px 6px; border-radius: 8px; }
-    small { opacity: 0.8; }
+    :root {
+      --bg: #0f1115;
+      --panel: #171b22;
+      --panel-2: #121821;
+      --line: #2a3240;
+      --text: #f2f4f8;
+      --muted: #a8b3c2;
+      --accent: #3b82f6;
+      --ok: #16a34a;
+      --warn: #f59e0b;
+      --bad: #dc2626;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap { max-width: 980px; margin: 0 auto; }
+    h1 { margin: 0 0 8px; }
+    p { color: var(--muted); }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      margin: 14px 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .label { font-size: 0.85rem; opacity: 0.78; }
+    .value { font-size: 1.02rem; margin-top: 6px; word-break: break-word; }
+
+    .status {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      margin: 10px 0 16px;
+      white-space: pre-wrap;
+    }
+
+    .row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 0.98rem;
+      cursor: pointer;
+      color: white;
+    }
+
+    button.primary { background: var(--accent); }
+    button.secondary { background: #2a3240; }
+    button.ok { background: var(--ok); }
+    button.warn { background: var(--warn); color: #111827; }
+    button.bad { background: var(--bad); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    code {
+      background: #11151c;
+      padding: 2px 6px;
+      border-radius: 8px;
+    }
+
+    .token {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.92rem;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      font-size: 0.85rem;
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>KILIAN BLE1 Dashboard DEV</h1>
+    <h1>KILIAN BLE2 Dashboard</h1>
     <p id="targetHint"></p>
 
     <div class="status" id="status">Déconnecté.</div>
 
-    <p>
+    <div class="row">
       <button class="primary" id="connectBtn">Connecter</button>
       <button class="secondary" id="refreshBtn">Rafraîchir</button>
       <button class="secondary" id="disconnectBtn">Déconnecter</button>
-    </p>
+    </div>
 
     <div class="card">
       <strong>Préparation côté clé</strong>
       <div style="margin-top:8px">
         Ouvre <code>ADMIN</code> → <code>MOBILE DASH</code> sur A ou B pour activer la fenêtre BLE.
-        Cette version DEV lit seulement les caractéristiques réellement exposées par le firmware BLE1 actuel.
+        Cette version BLE2 lit <code>session_state</code>, <code>session_token</code> et permet
+        <code>APPROVE|token</code>, <code>DENY|token</code> et <code>CLAIM|token</code> en mode legacy.
       </div>
+      <div class="pill" id="capsBadge">Capacités : —</div>
     </div>
 
     <div class="grid">
@@ -51,6 +129,21 @@
       <div class="card"><div class="label">Dernier événement</div><div class="value" id="last_event">—</div></div>
       <div class="card"><div class="label">Build</div><div class="value" id="build_info">—</div></div>
       <div class="card"><div class="label">Capacités</div><div class="value" id="capabilities">—</div></div>
+      <div class="card"><div class="label">Session state</div><div class="value" id="session_state">—</div></div>
+      <div class="card"><div class="label">Session token</div><div class="value token" id="session_token">—</div></div>
+    </div>
+
+    <div class="card">
+      <strong>Validation humaine</strong>
+      <div style="margin-top:8px; color: var(--muted)">
+        Utilise d’abord <code>APPROVE</code> ou <code>DENY</code> avec le token lu côté clé.
+        Le bouton <code>CLAIM legacy</code> reste là pour compatibilité si l’ancien firmware est encore flashé.
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="ok" id="approveBtn" disabled>APPROVE</button>
+        <button class="bad" id="denyBtn" disabled>DENY</button>
+        <button class="warn" id="claimBtn" disabled>CLAIM legacy</button>
+      </div>
     </div>
 
     <p><small>Utilise Chrome Android. Le navigateur demande toujours un geste utilisateur sur <code>Connecter</code>.</small></p>
@@ -66,21 +159,29 @@
       counter_summary: '8f4e1005-2b65-4d1a-9f5d-6b6f9cf50001',
       last_event: '8f4e1006-2b65-4d1a-9f5d-6b6f9cf50001',
       build_info: '8f4e1007-2b65-4d1a-9f5d-6b6f9cf50001',
-      capabilities: '8f4e1008-2b65-4d1a-9f5d-6b6f9cf50001'
+      capabilities: '8f4e1008-2b65-4d1a-9f5d-6b6f9cf50001',
+      session_state: '8f4e1009-2b65-4d1a-9f5d-6b6f9cf50001',
+      session_token: '8f4e100a-2b65-4d1a-9f5d-6b6f9cf50001',
+      session_claim: '8f4e100b-2b65-4d1a-9f5d-6b6f9cf50001'
     };
 
-    const decoder = new TextDecoder();
-    const params = new URLSearchParams(window.location.search);
-    const hash = (window.location.hash || '').replace('#', '').toLowerCase();
+    const READ_FIELDS = [
+      'device_role','system_state','pair_state','pair_summary','counter_summary',
+      'last_event','build_info','capabilities','session_state','session_token'
+    ];
 
-    let requestedDevice = params.get('device') || null;
-    if (!requestedDevice) {
-      if (hash === 'a') requestedDevice = 'KILIAN-A';
-      if (hash === 'b') requestedDevice = 'KILIAN-B';
-    }
+    const decoder = new TextDecoder();
+    const hash = (window.location.hash || '').replace('#', '').toLowerCase();
+    let requestedDevice = null;
+    if (hash === 'a') requestedDevice = 'KILIAN-A';
+    if (hash === 'b') requestedDevice = 'KILIAN-B';
 
     const statusEl = document.getElementById('status');
     const targetHintEl = document.getElementById('targetHint');
+    const capsBadgeEl = document.getElementById('capsBadge');
+    const approveBtn = document.getElementById('approveBtn');
+    const denyBtn = document.getElementById('denyBtn');
+    const claimBtn = document.getElementById('claimBtn');
 
     let device = null;
     let server = null;
@@ -93,12 +194,12 @@
 
     function renderField(id, value) {
       document.getElementById(id).textContent = value || '—';
+      if (id === 'capabilities') capsBadgeEl.textContent = `Capacités : ${value || '—'}`;
     }
 
     function clearFields() {
-      for (const id of Object.keys(CHAR_UUIDS)) {
-        renderField(id, '—');
-      }
+      for (const id of READ_FIELDS) renderField(id, '—');
+      updateActionButtons();
     }
 
     function updateTargetUi() {
@@ -116,10 +217,35 @@
       ).trim();
     }
 
+    function getField(id) {
+      return document.getElementById(id).textContent.trim();
+    }
+
+    function currentToken() {
+      const value = getField('session_token');
+      return value === '—' ? '' : value;
+    }
+
+    function currentState() {
+      const value = getField('session_state');
+      return value === '—' ? '' : value.toUpperCase();
+    }
+
+    function updateActionButtons() {
+      const enabled = !!service && !!currentToken() && currentState() === 'PENDING';
+      approveBtn.disabled = !enabled;
+      denyBtn.disabled = !enabled;
+      claimBtn.disabled = !enabled;
+    }
+
     async function attachNotifications(id, characteristic) {
       try {
         characteristic.addEventListener('characteristicvaluechanged', (event) => {
-          renderField(id, decodeValue(event.target.value));
+          const value = decodeValue(event.target.value);
+          renderField(id, value);
+          if (id === 'session_state' || id === 'session_token' || id === 'capabilities') {
+            updateActionButtons();
+          }
         });
         await characteristic.startNotifications();
       } catch (err) {
@@ -129,13 +255,48 @@
 
     async function refreshAll() {
       if (!service) return;
-      for (const [id, uuid] of Object.entries(CHAR_UUIDS)) {
+      for (const id of READ_FIELDS) {
+        const uuid = CHAR_UUIDS[id];
         const characteristic = characteristics[id] || await service.getCharacteristic(uuid);
         characteristics[id] = characteristic;
         const value = await characteristic.readValue();
         renderField(id, decodeValue(value));
       }
+      updateActionButtons();
       setStatus(`Connecté à ${device?.name || 'KILIAN'}.`);
+    }
+
+    async function ensureCharacteristic(id) {
+      if (characteristics[id]) return characteristics[id];
+      const characteristic = await service.getCharacteristic(CHAR_UUIDS[id]);
+      characteristics[id] = characteristic;
+      return characteristic;
+    }
+
+    async function writeAction(verb) {
+      if (!service) {
+        setStatus('Aucune clé connectée.');
+        return;
+      }
+
+      const token = currentToken();
+      const state = currentState();
+      if (!token || state !== 'PENDING') {
+        setStatus(`Action refusée côté page. session_state=${state || 'OFF'}, token=${token ? 'présent' : 'absent'}.`);
+        updateActionButtons();
+        return;
+      }
+
+      try {
+        const payload = `${verb}|${token}`;
+        const writer = await ensureCharacteristic('session_claim');
+        await writer.writeValue(new TextEncoder().encode(payload));
+        setStatus(`Commande envoyée : ${payload}`);
+        setTimeout(refreshAll, 250);
+        setTimeout(refreshAll, 1100);
+      } catch (err) {
+        setStatus(`Échec d'écriture ${verb} : ${err.message}`);
+      }
     }
 
     async function connectBluetooth() {
@@ -146,7 +307,7 @@
 
       try {
         clearFields();
-        setStatus(requestedDevice ? `Recherche de ${requestedDevice}...` : 'Recherche d’une clé KILIAN BLE1...');
+        setStatus(requestedDevice ? `Recherche de ${requestedDevice}...` : 'Recherche d’une clé KILIAN BLE2...');
         const filters = requestedDevice
           ? [{ name: requestedDevice }]
           : [{ namePrefix: 'KILIAN-' }];
@@ -167,17 +328,15 @@
         server = await device.gatt.connect();
         service = await server.getPrimaryService(SERVICE_UUID);
 
-        for (const [id, uuid] of Object.entries(CHAR_UUIDS)) {
-          const characteristic = await service.getCharacteristic(uuid);
+        for (const id of READ_FIELDS) {
+          const characteristic = await service.getCharacteristic(CHAR_UUIDS[id]);
           characteristics[id] = characteristic;
           await attachNotifications(id, characteristic);
         }
 
         await refreshAll();
       } catch (err) {
-        if (device?.gatt?.connected) {
-          device.gatt.disconnect();
-        }
+        if (device?.gatt?.connected) device.gatt.disconnect();
         server = null;
         service = null;
         for (const key of Object.keys(characteristics)) delete characteristics[key];
@@ -187,9 +346,7 @@
     }
 
     function disconnectBluetooth() {
-      if (device?.gatt?.connected) {
-        device.gatt.disconnect();
-      }
+      if (device?.gatt?.connected) device.gatt.disconnect();
       server = null;
       service = null;
       for (const key of Object.keys(characteristics)) delete characteristics[key];
@@ -201,6 +358,9 @@
     document.getElementById('connectBtn').addEventListener('click', connectBluetooth);
     document.getElementById('refreshBtn').addEventListener('click', refreshAll);
     document.getElementById('disconnectBtn').addEventListener('click', disconnectBluetooth);
+    approveBtn.addEventListener('click', () => writeAction('APPROVE'));
+    denyBtn.addEventListener('click', () => writeAction('DENY'));
+    claimBtn.addEventListener('click', () => writeAction('CLAIM'));
   </script>
 </body>
 </html>
